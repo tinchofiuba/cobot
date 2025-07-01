@@ -1,38 +1,11 @@
 
 #include <Servo.h>
+#include "../lib/movimiento.h"
 
 Servo hombro;
 Servo antebrazo;
 Servo brazo;
 Servo muneca;
-
-///////////////////////////////////////////////////
-//////////////////// Funciones ////////////////////
-///////////////////////////////////////////////////
-
-// movimiento de brazos (funciones básicas que ya tenías)
-void moverServoConVelocidad(int inicio, int fin, int delayTime, Servo &servo) {
-  if (inicio < fin) {
-    for (int angulo = inicio; angulo <= fin; angulo++) {
-      servo.write(angulo);
-      delay(delayTime);
-    }
-  } else {
-    for (int angulo = inicio; angulo >= fin; angulo--) {
-      servo.write(angulo);
-      delay(delayTime);
-    }
-  }
-}
-
-void moverServo(int anguloInicial, int anguloFinal, Servo &servo, int velocidad) {
-  moverServoConVelocidad(anguloInicial, anguloFinal, velocidad, servo);
-}
-
-///////////////////////////////////////////////////
-/////////////// Fin de funciones //////////////////
-///////////////////////////////////////////////////
-
 
 void setup() {
   Serial.begin(115200);
