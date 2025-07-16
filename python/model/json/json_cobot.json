@@ -1,0 +1,11 @@
+{
+"nombre": "carlita",
+"descripcion": "cobot de prueba",
+"DOF": {
+    "1": {"nombre": "base", "largo" : 0, "rotacion": "z", "tipo_motor": "paso_a_paso", "angulo_minimo": 1.8},
+    "2": {"nombre": "antebrazo", "largo" : 15, "rotacion": "x", "tipo_motor": "servo", "angulo_minimo": 1},
+    "3": {"nombre": "brazo", "largo" : 12, "rotacion": "x", "tipo_motor": "servo", "angulo_minimo": 1},
+    "4": {"nombre": "muñeca", "largo" : 8, "rotacion": "y", "tipo_motor": "servo", "angulo_minimo": 1}
+       },
+"movimientos": ["mover a (10,10,10)","mover a (20,20,20)", "mover a (30,30,30)"]
+}
