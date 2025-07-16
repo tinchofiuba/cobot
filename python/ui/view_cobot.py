@@ -14,6 +14,69 @@ class view(Ui_Dialog, QDialog):
         self.model = ModelCobot()
         self.json_ultimo_cobot = self.model.json_ultimo_cobot  
         self.poblar_widgets("init")
+        self.funcionalidad_hs()
+        self.funcionalidad_pb()
+        
+    def actualizar_motor(self):
+        if self.pb_seleccion_motor.text() == "Paso a paso":
+            self.pb_seleccion_motor.setText("Servo motor")
+        else:
+            self.pb_seleccion_motor.setText("Paso a paso")
+            
+    def verificacion_cantidad_movimientos(self):
+        if self.lw_lista_movimientos.count() == 0:
+            self.pb_remover_movimiento.setEnabled(False)
+            self.pb_borrar_todo_movimiento.setEnabled(False)
+            self.pb_iniciar_rutina.setEnabled(False)
+            self.lw_lista_movimientos.addItem("Sin movimientos asignados.")
+        else:
+            self.pb_remover_movimiento.setEnabled(True)
+            self.pb_borrar_todo_movimiento.setEnabled(True)
+            self.pb_iniciar_rutina.setEnabled(True)
+        
+            
+    def borrar_movimiento(self, cantidad):
+        if cantidad == "uno":
+            try:
+                item = self.lw_lista_movimientos.currentItem()
+                if item:
+                    self.lw_lista_movimientos.takeItem(self.lw_lista_movimientos.row(item))
+            except Exception as e:
+                print(f"Error al borrar movimiento: {e}")
+        elif cantidad == "todo":
+            self.lw_lista_movimientos.clear()
+                
+        self.verificacion_cantidad_movimientos() 
+        
+    def funcionalidad_pb(self):
+        self.pb_seleccion_motor.clicked.connect(self.actualizar_motor)
+        self.pb_borrar_todo_movimiento.clicked.connect(lambda: self.borrar_movimiento("todo"))
+        self.pb_remover_movimiento.clicked.connect(lambda: self.borrar_movimiento("uno"))
+        
+    def funcionalidad_hs(self):
+        self.hs_numero_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))
+        self.hs_selector_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_selector_DOF, self.l_valor_seleccion_DOF))
+        
+    def actualizar_widgets_seleccion_DOF(self, valor):
+        try:
+            self.le_largo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("largo", 0)))
+            self.le_nombre_eslavon.setText(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("nombre", "Cintura"))
+            self.le_angulo_minimo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("angulo_minimo", 1.8)))
+            self.pb_seleccion_motor.setText(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("tipo_motor", "Paso a paso"))
+            
+        except Exception as e:
+            print(f"Error al actualizar widgets de selección DOF: {e}")
+
+    def actualizar_hs(self, hs, l_valor_hs):
+        if hs == self.hs_numero_DOF:
+            self.hs_selector_DOF.setMaximum(hs.value())
+            if hs.value() < self.hs_selector_DOF.value():
+                self.hs_selector_DOF.setValue(hs.value())
+                self.l_valor_seleccion_DOF.setText(str(hs.value()))
+        if hs == self.hs_selector_DOF:
+            self.actualizar_widgets_seleccion_DOF(self.hs_selector_DOF.value())
+            
+        l_valor_hs.setText(str(hs.value()))
     
     def poblar_widgets(self,condicion: str):
         if self.json_ultimo_cobot:

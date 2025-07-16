@@ -100,7 +100,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pb_borrar">
+          <widget class="QPushButton" name="pb_borrar_todo_movimiento">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>150</horstretch>
@@ -144,7 +144,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_2">
+        <widget class="QPushButton" name="pb_iniciar_rutina">
          <property name="text">
           <string>Inciar rutina</string>
          </property>
