@@ -167,11 +167,19 @@ class view(Ui_Dialog, QDialog):
         dialog.movimiento_nievo_signal.connect(self.agregar_movimiento_a_lista) 
         dialog.exec_()
             
+    def iniciar_rutina(self):
+        movimientos_enviados = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
+        if movimientos_enviados:
+            self.model.inicar_rutina(movimientos_enviados)
+        else:
+            QMessageBox.warning(self, "Error", "No hay movimientos para iniciar la rutina.")
+                
     def funcionalidad_pb(self):
         self.pb_seleccion_motor.clicked.connect(self.actualizar_motor)
         self.pb_borrar_todo_movimiento.clicked.connect(lambda: self.borrar_movimiento("todo"))
         self.pb_remover_movimiento.clicked.connect(lambda: self.borrar_movimiento("uno"))
         self.pb_agregar_movimiento.clicked.connect(self.abrir_dialogo_movimiento)
+        self.pb_iniciar_rutina.clicked.connect(self.iniciar_rutina)
         
     def funcionalidad_hs(self):
         self.hs_numero_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))

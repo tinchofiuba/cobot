@@ -36,3 +36,7 @@ class ModelCobot(QObject):
             self.datos_actualizados.emit(self.datos)
         except json.JSONDecodeError as e:
             print(f"Error al decodificar JSON: {e}")
+            
+    def inicar_rutina(self, movimientos):
+        print(f"movimientos: {movimientos}")
+        
