@@ -1,10 +1,91 @@
 
 from .default_cobot import Ui_Dialog
 from ..model.model_cobot import ModelCobot
+from .agregar_movimientos import Ui_Dialog as Ui_Dialog_Movimiento
 
 from PyQt5.QtWidgets import QDialog, QMessageBox
 from PyQt5.QtCore import pyqtSignal, QTimer
 
+
+class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
+    
+    movimiento_nievo_signal = pyqtSignal(str)  
+    lista_movimientos_posibles = ["Mover a", "A origen", "Loop", "Endloop"]
+    
+    def __init__(self, parent=None):
+        super(DialogMovimiento, self).__init__(parent)
+        self.setupUi(self)
+        self.config_iniciales()  
+        self.funcionalidad_le("change")
+        self.funcionalidad_pb()
+        
+    def limpiar_y_deshabilitar_line_edits(self):
+        for le in [self.le_x, self.le_y, self.le_z, self.le_delay]:
+            le.clear()
+            le.setEnabled(False)
+        
+    def seleccionar_movimiento(self):
+        if self.pb_seleccion_movimiento.text() in self.lista_movimientos_posibles:
+            self.funcionalidad_le("check")
+            index = self.lista_movimientos_posibles.index(self.pb_seleccion_movimiento.text())
+            next_index = (index + 1) % len(self.lista_movimientos_posibles)
+            self.pb_seleccion_movimiento.setText(self.lista_movimientos_posibles[next_index])
+        else:
+            self.pb_seleccion_movimiento.setText(self.lista_movimientos_posibles[0])
+            
+        if self.pb_seleccion_movimiento.text() == "Loop" or self.pb_seleccion_movimiento.text() == "Endloop":
+            self.limpiar_y_deshabilitar_line_edits()
+            self.pb_agregar_movimiento.setEnabled(True)
+        else:
+            self.le_x.setEnabled(True)
+            self.le_y.setEnabled(True)
+            self.le_z.setEnabled(True)
+            self.le_delay.setEnabled(True)
+            #self.pb_agregar_movimiento.setEnabled(False)            
+        
+    def funcionalidad_pb(self):
+        self.pb_seleccion_movimiento.clicked.connect(self.seleccionar_movimiento)
+        self.pb_agregar_movimiento.clicked.connect(self.agregar_movimiento)
+        
+    def config_iniciales(self):
+        self.pb_agregar_movimiento.setEnabled(False)
+        
+    def agregar_movimiento(self):
+        delay = ""
+        vector = f"({self.le_x.text()},{self.le_y.text()},{self.le_z.text()})"
+        if self.le_delay.text() != "":
+            delay = f"d{self.le_delay.text()}"
+            self.movimiento = f"{self.pb_seleccion_movimiento.text()} {vector} {delay}"
+        else:
+            self.movimiento = f"{self.pb_seleccion_movimiento.text()} {vector}"
+            
+        self.movimiento_nievo_signal.emit(self.movimiento)
+        
+        print(f"Movimiento agregado: {self.movimiento}")
+        self.close()
+        
+    def funcionalidad_le(self,condicion: str):
+        if condicion == "change":
+            for le in [self.le_x, self.le_y, self.le_z]:
+                le.textChanged.connect(lambda: self.validar_line_edits(le))
+        elif condicion == "check":
+            #me fijo si todos los los le que estan en la lista estan llenos, si es así habilito el pb_agregar_movimiento con la función all()
+            if all(le.text() for le in [self.le_x, self.le_y, self.le_z]):
+                print(all(le.text() for le in [self.le_x, self.le_y, self.le_z]))
+                self.pb_agregar_movimiento.setEnabled(True)
+            else:
+                self.pb_agregar_movimiento.setEnabled(False)
+                
+        
+    def validar_line_edits(self, le):
+        print("cambio")
+        if le.text()== "":
+            self.pb_agregar_movimiento.setEnabled(False)
+            print("boton deshabilitado")
+        else:
+            print("boton habilitado")
+            self.pb_agregar_movimiento.setEnabled(True)
+        
 class view(Ui_Dialog, QDialog):
     
     def __init__(self, parent=None):
@@ -72,11 +153,25 @@ class view(Ui_Dialog, QDialog):
             self.lw_lista_movimientos.clear()
                 
         self.verificacion_cantidad_movimientos() 
+
+    def agregar_movimiento_a_lista(self, movimiento):
+        if movimiento:
+            #me fijo 
+            self.lw_lista_movimientos.addItem(movimiento)
+            self.verificacion_cantidad_movimientos()
+        else:
+            QMessageBox.warning(self, "Error", "No se pudo agregar el movimiento. Verifique los datos ingresados.")
         
+    def abrir_dialogo_movimiento(self):
+        dialog = DialogMovimiento(self)
+        dialog.movimiento_nievo_signal.connect(self.agregar_movimiento_a_lista) 
+        dialog.exec_()
+            
     def funcionalidad_pb(self):
         self.pb_seleccion_motor.clicked.connect(self.actualizar_motor)
         self.pb_borrar_todo_movimiento.clicked.connect(lambda: self.borrar_movimiento("todo"))
         self.pb_remover_movimiento.clicked.connect(lambda: self.borrar_movimiento("uno"))
+        self.pb_agregar_movimiento.clicked.connect(self.abrir_dialogo_movimiento)
         
     def funcionalidad_hs(self):
         self.hs_numero_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))

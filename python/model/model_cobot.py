@@ -21,7 +21,6 @@ else:
     print(f"El archivo {path_json} no existe.")
 
 class ModelCobot(QObject):
-    
     '''
     Model de la GUI para mandar ordenes al cobot, y también recibir información del cobot.
     '''
