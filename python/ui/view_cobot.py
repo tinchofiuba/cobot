@@ -180,7 +180,7 @@ class view(Ui_Dialog, QDialog):
         self.pb_remover_movimiento.clicked.connect(lambda: self.borrar_movimiento("uno"))
         self.pb_agregar_movimiento.clicked.connect(self.abrir_dialogo_movimiento)
         self.pb_iniciar_rutina.clicked.connect(self.iniciar_rutina)
-        
+        self.pb_conectar_controlador.clicked.connect(self.model.iniciar_deter_conexion)
     def funcionalidad_hs(self):
         self.hs_numero_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))
         self.hs_selector_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_selector_DOF, self.l_valor_seleccion_DOF))

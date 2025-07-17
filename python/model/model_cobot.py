@@ -3,6 +3,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 import json
 import os
+import serial
 
 #importo 
 
@@ -39,4 +40,14 @@ class ModelCobot(QObject):
             
     def inicar_rutina(self, movimientos):
         print(f"movimientos: {movimientos}")
+        
+    def iniciar_deter_conexion(self):
+        #inicio la conexión serial a 1115200 bauds
+        try:
+            self.ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+            print("Conexión establecida con el controlador.")
+        except serial.SerialException as e:
+            print(f"Error al conectar con el controlador: {e}")
+        
+        
         
