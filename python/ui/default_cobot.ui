@@ -616,7 +616,7 @@
      <string>Conectar</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="l_estado_de_conexion">
     <property name="geometry">
      <rect>
       <x>130</x>
@@ -626,7 +626,39 @@
      </rect>
     </property>
     <property name="text">
-     <string>Esperando conexión...</string>
+     <string>Desconectado</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb_setear_cobot">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>30</y>
+      <width>160</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>160</width>
+      <height>27</height>
+     </size>
+    </property>
+    <property name="text">
+     <string>Setear</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="l_seteo_cobot">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>33</y>
+      <width>161</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>cobot aún no seateado</string>
     </property>
    </widget>
   </widget>

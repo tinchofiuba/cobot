@@ -93,12 +93,30 @@ class view(Ui_Dialog, QDialog):
         self.setupUi(self)
         self.lista_line_edits = [self.le_nombre_cobot, self.le_largo_eslavon, self.le_nombre_eslavon, self.le_angulo_minimo_eslavon]
         self.model = ModelCobot()
-        self.json_ultimo_cobot = self.model.json_ultimo_cobot  
-        self.error_numerico_le = False
+        self.config_iniciales()
         self.poblar_widgets("init")
         self.funcionalidad_hs()
         self.funcionalidad_pb()
         self.funcionalidad_le()
+        self.funcionalidad_signals()
+        
+    def config_iniciales(self):
+        self.json_ultimo_cobot = self.model.json_ultimo_cobot  
+        self.error_numerico_le = False
+        self.pb_conectar_controlador.setStyleSheet("background-color: #99FF99;")
+        
+    def estado_conexion(self, conectado):
+        if conectado:
+            self.l_estado_de_conexion.setText("Controlador conectado")
+            self.pb_conectar_controlador.setText("Desconectar")
+            self.pb_conectar_controlador.setStyleSheet("background-color: #FF9999;")
+        else:
+            self.l_estado_de_conexion.setText("Desconectado")
+            self.pb_conectar_controlador.setText("Conectar")
+            self.pb_conectar_controlador.setStyleSheet("background-color: #99FF99;")
+    
+    def funcionalidad_signals(self):
+        self.model.conexion_signal.connect(self.estado_conexion)
         
     def validar_line_edits(self):
         todos_llenos = all(le.text().strip() != "" for le in self.lista_line_edits)
@@ -170,7 +188,8 @@ class view(Ui_Dialog, QDialog):
     def iniciar_rutina(self):
         movimientos_enviados = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
         if movimientos_enviados:
-            self.model.inicar_rutina(movimientos_enviados)
+            #self.model.inicar_rutina(movimientos_enviados)
+            self.model.iniciar_rutina("iniciar")
         else:
             QMessageBox.warning(self, "Error", "No hay movimientos para iniciar la rutina.")
                 
@@ -180,7 +199,10 @@ class view(Ui_Dialog, QDialog):
         self.pb_remover_movimiento.clicked.connect(lambda: self.borrar_movimiento("uno"))
         self.pb_agregar_movimiento.clicked.connect(self.abrir_dialogo_movimiento)
         self.pb_iniciar_rutina.clicked.connect(self.iniciar_rutina)
-        self.pb_conectar_controlador.clicked.connect(self.model.iniciar_deter_conexion)
+        self.pb_conectar_controlador.clicked.connect(self.model.iniciar_detener_conexion)
+        self.pb_setear_cobot.clicked.connect(lambda: self.model.setear_cobot_en_arduino(self.json_ultimo_cobot))
+        
+        
     def funcionalidad_hs(self):
         self.hs_numero_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))
         self.hs_selector_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_selector_DOF, self.l_valor_seleccion_DOF))
