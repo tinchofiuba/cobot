@@ -2,21 +2,46 @@
 from .default_cobot import Ui_Dialog
 from ..model.model_cobot import ModelCobot
 
-from PyQt5.QtWidgets import QDialog
-
-
-
+from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtCore import pyqtSignal, QTimer
 
 class view(Ui_Dialog, QDialog):
+    
     def __init__(self, parent=None):
         super(view, self).__init__(parent)
         self.setupUi(self)
+        self.lista_line_edits = [self.le_nombre_cobot, self.le_largo_eslavon, self.le_nombre_eslavon, self.le_angulo_minimo_eslavon]
         self.model = ModelCobot()
         self.json_ultimo_cobot = self.model.json_ultimo_cobot  
+        self.error_numerico_le = False
         self.poblar_widgets("init")
         self.funcionalidad_hs()
         self.funcionalidad_pb()
+        self.funcionalidad_le()
         
+    def validar_line_edits(self):
+        todos_llenos = all(le.text().strip() != "" for le in self.lista_line_edits)
+        try:
+            float(self.le_largo_eslavon.text())
+            float(self.le_angulo_minimo_eslavon.text())
+            numericos_validos = True
+        except ValueError:
+            numericos_validos = False
+            QMessageBox.warning(self, "Error", "Los campos numéricos deben ser válidos.")
+
+        self.pb_guardar_eslavon.setEnabled(todos_llenos and numericos_validos)
+
+        
+    def funcionalidad_le(self):
+        for le in self.lista_line_edits:
+            le.textChanged.connect(self.validar_line_edits)
+        
+    def habilitar_deshabilitar_guardado(self):
+        if all(le.text() for le in self.lista_line_edits):
+            self.pb_guardar_eslavon.setEnabled(True)
+        else:
+            self.pb_guardar_eslavon.setEnabled(False)
+
     def actualizar_motor(self):
         if self.pb_seleccion_motor.text() == "Paso a paso":
             self.pb_seleccion_motor.setText("Servo motor")
@@ -56,6 +81,7 @@ class view(Ui_Dialog, QDialog):
     def funcionalidad_hs(self):
         self.hs_numero_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))
         self.hs_selector_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_selector_DOF, self.l_valor_seleccion_DOF))
+        self.habilitar_deshabilitar_guardado()
         
     def actualizar_widgets_seleccion_DOF(self, valor):
         try:
