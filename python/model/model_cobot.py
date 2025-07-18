@@ -89,7 +89,8 @@ class ModelCobot(QObject):
                     if respuesta == "iniciado":
                         self.conexion_signal.emit(self.conectado)    
                         print(f"Se ha establecido la conexxión con el controlador")
-                    print(f"Respuesta del Arduino: {respuesta}, no es la esperada ...")
+                    else:
+                        print(f"Respuesta del Arduino: {respuesta}, no es la esperada ...")
                 else:
                     print("No hay respuesta del Arduino.")
 

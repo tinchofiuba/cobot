@@ -49,6 +49,7 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
         
     def config_iniciales(self):
         self.pb_agregar_movimiento.setEnabled(False)
+        self.pb_setear
         
     def agregar_movimiento(self):
         delay = ""
@@ -104,16 +105,19 @@ class view(Ui_Dialog, QDialog):
         self.json_ultimo_cobot = self.model.json_ultimo_cobot  
         self.error_numerico_le = False
         self.pb_conectar_controlador.setStyleSheet("background-color: #99FF99;")
+        self.pb_setear_cobot.setEnabled(False)
         
     def estado_conexion(self, conectado):
         if conectado:
             self.l_estado_de_conexion.setText("Controlador conectado")
             self.pb_conectar_controlador.setText("Desconectar")
             self.pb_conectar_controlador.setStyleSheet("background-color: #FF9999;")
+            self.pb_setear_cobot.setEnabled(True)
         else:
             self.l_estado_de_conexion.setText("Desconectado")
             self.pb_conectar_controlador.setText("Conectar")
             self.pb_conectar_controlador.setStyleSheet("background-color: #99FF99;")
+            self.pb_setear_cobot.setEnabled(False)
     
     def funcionalidad_signals(self):
         self.model.conexion_signal.connect(self.estado_conexion)
@@ -200,7 +204,7 @@ class view(Ui_Dialog, QDialog):
         self.pb_agregar_movimiento.clicked.connect(self.abrir_dialogo_movimiento)
         self.pb_iniciar_rutina.clicked.connect(self.iniciar_rutina)
         self.pb_conectar_controlador.clicked.connect(self.model.iniciar_detener_conexion)
-        self.pb_setear_cobot.clicked.connect(lambda: self.model.setear_cobot_en_arduino(self.json_ultimo_cobot))
+        self.pb_setear_cobot.clicked.connect(lambda: self.model.setear_cobot_en_arduino())
         
         
     def funcionalidad_hs(self):

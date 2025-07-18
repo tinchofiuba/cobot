@@ -12,16 +12,23 @@ bool isConectado = false;
                     #define MAX_PAP 6
 
                     struct ServoConfig {
-                    String nombre; 
-                    byte pin;       
-                    byte limiteMin; 
-                    byte limiteMax; 
-                    byte largo;
-                    byte angulo_paso;
-                    Servo servo;   
+                      String nombre;  
+                      byte pin;       
+                      byte largo;     
+                      byte angulo_paso; 
+                      Servo servo;    
+
+                      void configurar(String n, byte p, byte l, byte a) {
+                        nombre = n;
+                        pin = p;
+                        largo = l;
+                        angulo_paso = a;
+                        servo.attach(pin); 
+                      }
                     };
 
                     Servo servos[MAX_SERVOS];
+
                     byte numServos = 0;
 
                     struct MotorPasoAPaso {
@@ -40,6 +47,7 @@ bool isConectado = false;
 
 
 void setear_cobot(String jsonConfig) {
+
   StaticJsonDocument<512> doc;
 
   DeserializationError error = deserializeJson(doc, jsonConfig);
@@ -51,15 +59,22 @@ void setear_cobot(String jsonConfig) {
   // Si llegó hasta acá es que el JSON es válido !!
 
   JsonArray motoresArray = doc["pap"];
+  JsonArray servosArray = doc["servos"];
   numMotores = motoresArray.size();
+  numServos = servosArray.size();
   if (numMotores > MAX_PAP) {
     Serial.println("Error: Número de motores paso a paso excede el máximo soportado.");
     return;
   }
 
+  if (numServos > MAX_SERVOS) {
+    Serial.println("Error: Número de servomotores excede el máximo soportado.");
+    return;
+  }
+
   // inicio el ciclo for para setear el struct de los motores paso a paso
 
-  for (int i = 0; i < numMotores; i++) {
+  for (byte i = 0; i < numMotores; i++) {
     motores[i].enable = motoresArray[i]["en"];
     motores[i].pasos = motoresArray[i]["p"];
     motores[i].direccion = motoresArray[i]["dir"];
@@ -76,10 +91,23 @@ void setear_cobot(String jsonConfig) {
     digitalWrite(motores[i].direccion, LOW);
 
   }
-  Serial.println("Cobot seteado!");
+
+for (byte j = 0; j < numServos; j++) {
+
+  servos[j].configurar(
+    servosArray[j]["n"], 
+    servosArray[j]["p"], 
+    servosArray[j]["l"], 
+    servosArray[j]["a"]
+  );
+
   digitalWrite(ledPin, HIGH);
-  delay(2000);
-  
+  delay(5000);
+  //Serial.println("Cobot seteado!");
+  //hago un print de la cantidad de motores paso a paso y la cantidad de servos
+  String mje = String(numMotores)+ " " +String(numServos);
+  Serial.println(mje);
+
 }
 
 
