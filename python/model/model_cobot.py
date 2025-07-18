@@ -48,9 +48,10 @@ class ModelCobot(QObject):
                     json_cobot = json.load(file)
                     json_string = json.dumps(json_cobot) 
                     print(f"Enviando JSON al Arduino: {json_string}")
+                    print(len(json_string))
 
                     self.ser.write((json_string + "\n").encode())
-                    time.sleep(0.5)  # Esperar por si hay respuesta
+                    time.sleep(1)  # Esperar por si hay respuesta
 
                     if self.ser.in_waiting > 0:
                         respuesta = self.ser.readline().decode().strip()

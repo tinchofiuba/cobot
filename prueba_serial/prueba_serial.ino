@@ -27,8 +27,8 @@ bool isConectado = false;
                       }
                     };
 
-                    Servo servos[MAX_SERVOS];
-
+                    ServoConfig servos[MAX_SERVOS];
+                    
                     byte numServos = 0;
 
                     struct MotorPasoAPaso {
@@ -48,7 +48,8 @@ bool isConectado = false;
 
 void setear_cobot(String jsonConfig) {
 
-  StaticJsonDocument<512> doc;
+  StaticJsonDocument<700> doc;
+  Serial.println(jsonConfig);
 
   DeserializationError error = deserializeJson(doc, jsonConfig);
   if (error) {
@@ -92,21 +93,23 @@ void setear_cobot(String jsonConfig) {
 
   }
 
-for (byte j = 0; j < numServos; j++) {
-
-  servos[j].configurar(
-    servosArray[j]["n"], 
-    servosArray[j]["p"], 
-    servosArray[j]["l"], 
-    servosArray[j]["a"]
-  );
-
-  digitalWrite(ledPin, HIGH);
-  delay(5000);
-  //Serial.println("Cobot seteado!");
-  //hago un print de la cantidad de motores paso a paso y la cantidad de servos
-  String mje = String(numMotores)+ " " +String(numServos);
-  Serial.println(mje);
+  for (byte j = 0; j < numServos; j++) {
+  
+    servos[j].configurar(
+      servosArray[j]["n"], 
+      servosArray[j]["p"], 
+      servosArray[j]["l"], 
+      servosArray[j]["a"]
+    );
+  
+    digitalWrite(ledPin, HIGH);
+    delay(5000);
+    //Serial.println("Cobot seteado!");
+    //hago un print de la cantidad de motores paso a paso y la cantidad de servos
+    String mje = String(numMotores)+ " " +String(numServos);
+    Serial.println(mje);
+  
+  }
 
 }
 
@@ -125,7 +128,7 @@ void esperando_coordenadas()
     if (Serial.available() > 0) {
       
         String mensaje = Serial.readStringUntil('\n');
-        mensaje.trim();
+        //mensaje.trim();
         if (mensaje == "finalizar") {
           
           Serial.println("finalizado");
@@ -133,9 +136,8 @@ void esperando_coordenadas()
           break;               
         
         }
-
         else if (mensaje.startsWith("{"))  {
-          
+        Serial.println(mensaje);
         setear_cobot(mensaje);
           
         }
