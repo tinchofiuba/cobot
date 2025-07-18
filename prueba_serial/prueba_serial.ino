@@ -1,3 +1,4 @@
+
 #include <Servo.h>
 #include <ArduinoJson.h>
 
@@ -11,14 +12,14 @@ bool isConectado = false;
                     #define MAX_SERVOS 6
                     #define MAX_PAP 6
 
-                    struct ServoConfig {
+                    struct servoConfig {
                       String nombre;  
                       byte pin;       
                       byte largo;     
-                      byte angulo_paso; 
-                      Servo servo;    
+                      float angulo_paso; 
+                      Servo servo;   
 
-                      void configurar(String n, byte p, byte l, byte a) {
+                      void configurar(String n, byte p, byte l, float a) {
                         nombre = n;
                         pin = p;
                         largo = l;
@@ -27,96 +28,121 @@ bool isConectado = false;
                       }
                     };
 
-                    ServoConfig servos[MAX_SERVOS];
-                    
                     byte numServos = 0;
-
-                    struct MotorPasoAPaso {
+                    servoConfig servos[MAX_SERVOS];
+                    
+                  
+                    struct papconfig {
+                    String nombre;
                     byte enable;
                     byte pasos;
                     byte direccion;
                     byte largo;
-                    byte angulo_paso;
-
+                    float angulo_paso;
                     };
 
-                    MotorPasoAPaso motores[MAX_PAP]; 
                     byte numMotores = 0;
+                    papconfig motores[MAX_PAP];
+
+bool configuracion_terminada = false;
 
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
 
-void setear_cobot(String jsonConfig) {
+void setear_cobot( ) {
+  while (true)  {
+    if (Serial.available() >0) {
+      String mensaje = Serial.readStringUntil('\n');
+      mensaje.trim(); // Elimina espacios en blanco o caracteres extra
+      if (mensaje.startsWith("p")) 
+        {
 
-  StaticJsonDocument<700> doc;
-  Serial.println(jsonConfig);
+        String datos = mensaje.substring(2); 
 
-  DeserializationError error = deserializeJson(doc, jsonConfig);
-  if (error) {
-    Serial.println("Error al analizar JSON");
-    return;
+        String nombre = "";
+        byte enable = 0;
+        byte pasos = 0;
+        byte direccion = 0;
+        byte largo = 0;
+        float angulo_paso = 0.0;
+        byte largo_datos = datos.length();
+
+        for (byte i=0; i< largo_datos; i++)
+        {
+          if (datos[i] == ',') {
+            if (nombre == "") {
+              nombre = datos.substring(0, i);
+              Serial.println("Nombre del pap: " + nombre);
+            } else if (enable == 0) {
+              enable = datos.substring(0, i).toInt();
+              Serial.println("Enable del pap: " + String(enable));
+            } else if (pasos == 0) {
+              pasos = datos.substring(0, i).toInt();
+              Serial.println("Pasos del pap: " + String(pasos));
+            } else if (direccion == 0) {
+              direccion = datos.substring(0, i).toInt();
+              Serial.println("Direccion del pap: " + String(direccion));
+            } else if (largo == 0) {
+              largo = datos.substring(0, i).toInt();
+              Serial.println("Largo del pap: " + String(largo));
+            } else {
+              angulo_paso = datos.substring(0, i).toFloat();
+              Serial.println("Angulo del pap: " + String(angulo_paso));
+            }
+            datos = datos.substring(i + 1); // Elimina la parte procesada
+            i = -1; // Reinicia el índice para procesar el nuevo string
+          }
+
+        }
+      }
+
+      else if (mensaje.startsWith("s"))
+      {
+
+        String datos = mensaje.substring(2); 
+
+        String nombre = "";
+        byte pin = 0;
+        byte largo = 0;
+        float angulo_paso = 0.0;
+        byte largo_datos = datos.length();
+
+        for (byte i=0; i< largo_datos; i++)
+        {
+          if (datos[i] == ',') {
+            if (nombre == "") {
+              nombre = datos.substring(0, i);
+              Serial.println("Nombre del servo: " + nombre);
+            } else if (pin == 0) {
+              pin = datos.substring(0, i).toInt();
+              Serial.println("Pin del servo: " + String(pin));
+            }  else if (largo == 0) {
+              largo = datos.substring(0, i).toInt();
+              Serial.println("Largo del servo: " + String(largo));
+            } else {
+              angulo_paso = datos.substring(0, i).toFloat();
+              Serial.println("Angulo del servo: " + String(angulo_paso));
+            }
+            datos = datos.substring(i + 1); // Elimina la parte procesada
+            i = -1; // Reinicia el índice para procesar el nuevo string
+          }
+        }
+        Serial.prinln("siguiente");
+      }
+
+      else if (mensaje.startsWith("f"))
+      {
+      Serial.println("fin!!");
+      break;  
+      }
+
+    }
+  }
   }
 
-  // Si llegó hasta acá es que el JSON es válido !!
-
-  JsonArray motoresArray = doc["pap"];
-  JsonArray servosArray = doc["servos"];
-  numMotores = motoresArray.size();
-  numServos = servosArray.size();
-  if (numMotores > MAX_PAP) {
-    Serial.println("Error: Número de motores paso a paso excede el máximo soportado.");
-    return;
-  }
-
-  if (numServos > MAX_SERVOS) {
-    Serial.println("Error: Número de servomotores excede el máximo soportado.");
-    return;
-  }
-
-  // inicio el ciclo for para setear el struct de los motores paso a paso
-
-  for (byte i = 0; i < numMotores; i++) {
-    motores[i].enable = motoresArray[i]["en"];
-    motores[i].pasos = motoresArray[i]["p"];
-    motores[i].direccion = motoresArray[i]["dir"];
-    motores[i].largo = motoresArray[i]["l"];
-    motores[i].angulo_paso = motoresArray[i]["a"];
-
-    pinMode(motores[i].enable, OUTPUT);
-    pinMode(motores[i].pasos, OUTPUT);
-    pinMode(motores[i].direccion, OUTPUT);
-
-    // Inicializo el motor por pasos -> deshabilitado inicialmente
-    digitalWrite(motores[i].enable, HIGH); // HIGH deshabilitará el motor
-    digitalWrite(motores[i].pasos, LOW);
-    digitalWrite(motores[i].direccion, LOW);
-
-  }
-
-  for (byte j = 0; j < numServos; j++) {
-  
-    servos[j].configurar(
-      servosArray[j]["n"], 
-      servosArray[j]["p"], 
-      servosArray[j]["l"], 
-      servosArray[j]["a"]
-    );
-  
-    digitalWrite(ledPin, HIGH);
-    delay(5000);
-    //Serial.println("Cobot seteado!");
-    //hago un print de la cantidad de motores paso a paso y la cantidad de servos
-    String mje = String(numMotores)+ " " +String(numServos);
-    Serial.println(mje);
-  
-  }
-
-}
 
 
-
-
-void esperando_coordenadas()
+void esperando_seteo()
 {
   while (isConectado) { 
     
@@ -136,12 +162,11 @@ void esperando_coordenadas()
           break;               
         
         }
-        else if (mensaje.startsWith("{"))  {
-        Serial.println(mensaje);
-        setear_cobot(mensaje);
+        else if (mensaje == "set")  {
+        Serial.println("esperando_set");
+        setear_cobot();
           
         }
-        
 
     }
     
@@ -160,7 +185,7 @@ void esperando_inicializacion()
           Serial.println("iniciado");
           blinkDelay = 1000; 
           isConectado = true;
-          esperando_coordenadas();
+          esperando_seteo();
         }
       } 
       else if (mensaje == "finalizar") {
@@ -178,14 +203,12 @@ void esperando_inicializacion()
 // FIN DEL BARDO
 ////////////////////////////
 
-
-
-
 void setup() 
 {
   
   Serial.begin(bauds);
   pinMode(ledPin, OUTPUT);
+  Serial.println("holaaa");
   
 }
 

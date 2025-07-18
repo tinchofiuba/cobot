@@ -36,6 +36,7 @@ class ModelCobot(QObject):
         print(self.json_ultimo_cobot)
         
     def setear_cobot_en_arduino(self):
+        
         if not self.conectado:
             print("No hay conexión con el Arduino. Conectarse primero!.")
             return
@@ -46,6 +47,8 @@ class ModelCobot(QObject):
             if os.path.exists(path_json):
                 with open(path_json, "r") as file:
                     json_cobot = json.load(file)
+                    
+                    
                     json_string = json.dumps(json_cobot) 
                     print(f"Enviando JSON al Arduino: {json_string}")
                     print(len(json_string))
