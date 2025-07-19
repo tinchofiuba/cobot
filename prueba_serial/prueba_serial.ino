@@ -4,218 +4,215 @@
 
 int bauds = 9600;
 int ledPin = 13;
-int blinkDelay = 333; // 1 segundo por defecto
+int blinkDelay = 333;  // 1 segundo por defecto
 bool isConectado = false;
-
+byte p = 0, s = 0;
 // CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
-                    #define MAX_SERVOS 6
-                    #define MAX_PAP 6
+#define MAX_SERVOS 6
+#define MAX_PAP 6
 
-                    struct servoConfig {
-                      String nombre;  
-                      byte pin;       
-                      byte largo;     
-                      float angulo_paso; 
-                      Servo servo;   
+struct servoConfig {
+  String nombre;
+  byte pin;
+  byte largo;
+  float angulo_paso;
+  Servo servo;
+};
 
-                      void configurar(String n, byte p, byte l, float a) {
-                        nombre = n;
-                        pin = p;
-                        largo = l;
-                        angulo_paso = a;
-                        servo.attach(pin); 
-                      }
-                    };
+byte numServos = 0;
+servoConfig servos[MAX_SERVOS];
 
-                    byte numServos = 0;
-                    servoConfig servos[MAX_SERVOS];
-                    
-                  
-                    struct papconfig {
-                    String nombre;
-                    byte enable;
-                    byte pasos;
-                    byte direccion;
-                    byte largo;
-                    float angulo_paso;
-                    };
 
-                    byte numMotores = 0;
-                    papconfig motores[MAX_PAP];
+struct papconfig {
+  String nombre;
+  byte enable;
+  byte pasos;
+  byte direccion;
+  byte largo;
+  float angulo_paso;
+};
+
+byte numMotores = 0;
+papconfig motores[MAX_PAP];
 
 bool configuracion_terminada = false;
 
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
 
-void setear_cobot( ) {
-  while (true)  {
-    if (Serial.available() >0) {
-      String mensaje = Serial.readStringUntil('\n');
-      mensaje.trim(); // Elimina espacios en blanco o caracteres extra
-      if (mensaje.startsWith("p")) 
-        {
+void setear_cobot(String datos) {
 
-        String datos = mensaje.substring(2); 
+  datos.trim();  
 
-        String nombre = "";
-        byte enable = 0;
-        byte pasos = 0;
-        byte direccion = 0;
-        byte largo = 0;
-        float angulo_paso = 0.0;
-        byte largo_datos = datos.length();
+  while (datos.length() > 0) {
+    if (datos.startsWith("p")) {
+      datos = datos.substring(2); 
 
-        for (byte i=0; i< largo_datos; i++)
-        {
-          if (datos[i] == ',') {
-            if (nombre == "") {
-              nombre = datos.substring(0, i);
-              Serial.println("Nombre del pap: " + nombre);
-            } else if (enable == 0) {
-              enable = datos.substring(0, i).toInt();
-              Serial.println("Enable del pap: " + String(enable));
-            } else if (pasos == 0) {
-              pasos = datos.substring(0, i).toInt();
-              Serial.println("Pasos del pap: " + String(pasos));
-            } else if (direccion == 0) {
-              direccion = datos.substring(0, i).toInt();
-              Serial.println("Direccion del pap: " + String(direccion));
-            } else if (largo == 0) {
-              largo = datos.substring(0, i).toInt();
-              Serial.println("Largo del pap: " + String(largo));
-            } else {
-              angulo_paso = datos.substring(0, i).toFloat();
-              Serial.println("Angulo del pap: " + String(angulo_paso));
-            }
-            datos = datos.substring(i + 1); // Elimina la parte procesada
-            i = -1; // Reinicia el índice para procesar el nuevo string
-          }
+      byte fin = datos.indexOf(';'); 
+      if (fin == -1) break; 
 
+      String bloque = datos.substring(0, fin);  
+      datos = datos.substring(fin + 1);         
+
+      byte idx = 0;
+      String campos[6];
+      for (byte i = 0; i < 6; i++) {
+        byte coma = bloque.indexOf(',');
+        if (coma == -1 && i < 5) {
+          Serial.println("Error: faltan campos en el comando del pap");
+          return;
+        }
+
+        if (coma == -1) {
+          campos[i] = bloque; // Último campo
+        } else {
+          campos[i] = bloque.substring(0, coma);
+          bloque = bloque.substring(coma + 1);
         }
       }
 
-      else if (mensaje.startsWith("s"))
-      {
+      String nombre = campos[0];
+      byte enable = campos[1].toInt();
+      byte pasos = campos[2].toInt();
+      byte direccion = campos[3].toInt();
+      byte largo = campos[4].toInt();
+      float angulo_paso = campos[5].toFloat();
 
-        String datos = mensaje.substring(2); 
+      Serial.println("Nombre del pap: " + nombre);
+      Serial.println("Enable: " + String(enable));
+      Serial.println("Pasos: " + String(pasos));
+      Serial.println("Direccion: " + String(direccion));
+      Serial.println("Largo: " + String(largo));
+      Serial.println("Angulo paso: " + String(angulo_paso));
 
-        String nombre = "";
-        byte pin = 0;
-        byte largo = 0;
-        float angulo_paso = 0.0;
-        byte largo_datos = datos.length();
+      motores[p].nombre = nombre;
+      motores[p].enable = enable;
+      motores[p].pasos = pasos;
+      motores[p].direccion = direccion;
+      motores[p].largo = largo;
+      motores[p].angulo_paso = angulo_paso;
 
-        for (byte i=0; i< largo_datos; i++)
-        {
-          if (datos[i] == ',') {
-            if (nombre == "") {
-              nombre = datos.substring(0, i);
-              Serial.println("Nombre del servo: " + nombre);
-            } else if (pin == 0) {
-              pin = datos.substring(0, i).toInt();
-              Serial.println("Pin del servo: " + String(pin));
-            }  else if (largo == 0) {
-              largo = datos.substring(0, i).toInt();
-              Serial.println("Largo del servo: " + String(largo));
-            } else {
-              angulo_paso = datos.substring(0, i).toFloat();
-              Serial.println("Angulo del servo: " + String(angulo_paso));
-            }
-            datos = datos.substring(i + 1); // Elimina la parte procesada
-            i = -1; // Reinicia el índice para procesar el nuevo string
-          }
+      pinMode(enable, OUTPUT);
+      pinMode(pasos, OUTPUT);
+      pinMode(direccion, OUTPUT);
+
+      p++;  
+    } 
+
+    else if (datos.startsWith("s")) {
+      datos = datos.substring(2); 
+
+      byte fin = datos.indexOf(';'); 
+      if (fin == -1) break; 
+
+      String bloque = datos.substring(0, fin);  
+      datos = datos.substring(fin + 1);         
+
+      byte idx = 0;
+      String campos[4];
+      for (byte i = 0; i < 4; i++) {
+        Serial.println("aaaaaaaaaa");
+        byte coma = bloque.indexOf(',');
+        if (coma == -1 && i < 3) {
+          Serial.println("Error: faltan campos en el comando del servo");
+          return;
         }
-        Serial.prinln("siguiente");
+
+        if (coma == -1) {
+          campos[i] = bloque; // Último campo
+          Serial.println("AAAAAA");
+        } else {
+          campos[i] = bloque.substring(0, coma);
+          bloque = bloque.substring(coma + 1);
+          Serial.println("BBBB");
+        }
       }
 
-      else if (mensaje.startsWith("f"))
-      {
-      Serial.println("fin!!");
-      break;  
-      }
+      String nombre = campos[0];
+      byte pin = campos[1].toInt();
+      byte largo = campos[2].toInt();
+      float angulo_paso = campos[3].toFloat();
 
+      Serial.println("Nombre del servo: " + nombre);
+      Serial.println("pin: " + String(pin));
+      Serial.println("Largo: " + String(largo));
+      Serial.println("Angulo paso: " + String(angulo_paso));
+
+      servos[s].nombre = nombre;
+      servos[s].pin = pin;
+      servos[s].largo = largo;
+      servos[s].angulo_paso = angulo_paso;
+
+      pinMode(servos[s].pin, OUTPUT);
+      servos[s].servo.attach(servos[s].pin);
+
+      s++;  
+    }
+    else {
+      Serial.println("Error: prefijo desconocido");
+      break;
     }
   }
-  }
+
+  Serial.println("Resto del string para otros parseos: " + datos);
+}
 
 
+void esperando_seteo() {
+  while (isConectado) {
 
-void esperando_seteo()
-{
-  while (isConectado) { 
-    
     digitalWrite(ledPin, HIGH);
     delay(blinkDelay / 2);
     digitalWrite(ledPin, LOW);
     delay(blinkDelay / 2);
-    
-    if (Serial.available() > 0) {
-      
-        String mensaje = Serial.readStringUntil('\n');
-        //mensaje.trim();
-        if (mensaje == "finalizar") {
-          
-          Serial.println("finalizado");
-          isConectado = false;   
-          break;               
-        
-        }
-        else if (mensaje == "set")  {
-        Serial.println("esperando_set");
-        setear_cobot();
-          
-        }
 
-    }
-    
-  }
-}
-    
-void esperando_inicializacion()
-{
-  
     if (Serial.available() > 0) {
+
       String mensaje = Serial.readStringUntil('\n');
-      mensaje.trim(); // Elimina espacios en blanco o caracteres extra
+      //mensaje.trim();
+      if (mensaje == "finalizar") {
 
-      if (mensaje == "iniciar") {
-        if (!isConectado) {
-          Serial.println("iniciado");
-          blinkDelay = 1000; 
-          isConectado = true;
-          esperando_seteo();
-        }
-      } 
-      else if (mensaje == "finalizar") {
-          Serial.println("finalizado"); 
-          }
+        Serial.println("finalizado");
+        isConectado = false;
+        break;
+      }
+
+      else if (mensaje.startsWith("p_") || mensaje.startsWith("s_")) {
+        Serial.println("Seteando cobot");
+        setear_cobot(mensaje);
+      }
     }
-
-    //else {
-      //Serial.println("sin ordenes");
-    //}
-    
+  }
 }
 
 ////////////////////////////
 // FIN DEL BARDO
 ////////////////////////////
 
-void setup() 
-{
-  
+void setup() {
+
   Serial.begin(bauds);
   pinMode(ledPin, OUTPUT);
-  Serial.println("holaaa");
-  
 }
 
-void loop() 
+void loop()
 
 {
-  
-  esperando_inicializacion();
 
+  if (Serial.available() > 0) {
+    String mensaje = Serial.readStringUntil('\n');
+    mensaje.trim();  // Elimina espacios en blanco o caracteres extra
+
+    if (mensaje == "iniciar") {
+      if (!isConectado) {
+        Serial.println("iniciado");
+        blinkDelay = 1000;
+        isConectado = true;
+        esperando_seteo();
+      }
+    } else if (mensaje == "finalizar") {
+      Serial.println("finalizado");
+    }
+  }
 }

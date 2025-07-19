@@ -35,26 +35,36 @@ class ModelCobot(QObject):
         self.conectado = False
         print(self.json_ultimo_cobot)
         
+    def from_json_to_arduino(self, json_cobot):
+        json_plano =""
+        lista_setup =[]
+        for key, value in json_cobot.items():
+            if key == str(len(json_cobot)):
+                char_final = "f"
+            else:
+                char_final = ""
+            if value['motor']['tipo'] == "Paso a paso":
+                json_plano += f"{char_final}p_{value['nombre']},{value['motor']['enable']},{value['motor']['pin']},{value['motor']['direccion']},{value['largo']},{value['motor']['angulo_minimo']};"
+            else:
+                json_plano += f"{char_final}s_{value['nombre']},{value['motor']['pin']},{value['largo']},{value['motor']['angulo_minimo']};"
+        print(f"json_plano: {json_plano}")
+        return json_plano
+        
+           
     def setear_cobot_en_arduino(self):
         
         if not self.conectado:
             print("No hay conexión con el Arduino. Conectarse primero!.")
             return
-
         try:
-            path_json = "python/model/json/ultimo_cobot_guardaro.json" #cambiar esto!!
-
+            path_json = "python/model/json/json_cobot.json" #cambiar esto!!
             if os.path.exists(path_json):
                 with open(path_json, "r") as file:
                     json_cobot = json.load(file)
-                    
-                    
-                    json_string = json.dumps(json_cobot) 
-                    print(f"Enviando JSON al Arduino: {json_string}")
-                    print(len(json_string))
+                    json_plano = self.from_json_to_arduino(json_cobot["DOF"]) #codificco de una manera plana para ocupe menos bytes posibles
 
-                    self.ser.write((json_string + "\n").encode())
-                    time.sleep(1)  # Esperar por si hay respuesta
+                    self.ser.write((json_plano + "\n").encode())
+                    time.sleep(0.5)  # Esperar por si hay respuesta
 
                     if self.ser.in_waiting > 0:
                         respuesta = self.ser.readline().decode().strip()
@@ -80,7 +90,8 @@ class ModelCobot(QObject):
     def iniciar_detener_conexion(self):
         if self.conectado == False:
             try:
-                self.ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+                #self.ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1) #para linux, 
+                self.ser = serial.Serial("COM10",9600, timeout=1)  #PAR WINDOWS, usb frontal
                 time.sleep(2)  # espero por las dudas, así se establece la conexión
                 self.conectado = True
                 mensaje = "iniciar" + "\n"  
