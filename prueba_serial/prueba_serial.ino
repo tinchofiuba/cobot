@@ -50,7 +50,7 @@ void setear_cobot(String datos) {
       datos = datos.substring(2); 
 
       byte fin = datos.indexOf(';'); 
-      if (fin == -1) break; 
+      if (fin == -1) break; //si llego al final del string corta
 
       String bloque = datos.substring(0, fin);  
       datos = datos.substring(fin + 1);         
@@ -58,17 +58,22 @@ void setear_cobot(String datos) {
       byte idx = 0;
       String campos[6];
       for (byte i = 0; i < 6; i++) {
+
         byte coma = bloque.indexOf(',');
         if (coma == -1 && i < 5) {
           Serial.println("Error: faltan campos en el comando del pap");
           return;
+
         }
 
         if (coma == -1) {
+
           campos[i] = bloque; // Último campo
         } else {
+
           campos[i] = bloque.substring(0, coma);
           bloque = bloque.substring(coma + 1);
+
         }
       }
 
@@ -101,6 +106,7 @@ void setear_cobot(String datos) {
     } 
 
     else if (datos.startsWith("s")) {
+
       datos = datos.substring(2); 
 
       byte fin = datos.indexOf(';'); 
@@ -112,20 +118,27 @@ void setear_cobot(String datos) {
       byte idx = 0;
       String campos[4];
       for (byte i = 0; i < 4; i++) {
+
         Serial.println("aaaaaaaaaa");
         byte coma = bloque.indexOf(',');
         if (coma == -1 && i < 3) {
+
           Serial.println("Error: faltan campos en el comando del servo");
           return;
+
         }
 
         if (coma == -1) {
+
           campos[i] = bloque; // Último campo
           Serial.println("AAAAAA");
+
         } else {
+
           campos[i] = bloque.substring(0, coma);
           bloque = bloque.substring(coma + 1);
           Serial.println("BBBB");
+
         }
       }
 
@@ -148,10 +161,13 @@ void setear_cobot(String datos) {
       servos[s].servo.attach(servos[s].pin);
 
       s++;  
+
     }
     else {
+
       Serial.println("Error: prefijo desconocido");
       break;
+
     }
   }
 
@@ -160,6 +176,7 @@ void setear_cobot(String datos) {
 
 
 void esperando_seteo() {
+
   while (isConectado) {
 
     digitalWrite(ledPin, HIGH);
@@ -176,11 +193,15 @@ void esperando_seteo() {
         Serial.println("finalizado");
         isConectado = false;
         break;
+
       }
 
       else if (mensaje.startsWith("p_") || mensaje.startsWith("s_")) {
         Serial.println("Seteando cobot");
         setear_cobot(mensaje);
+        String chequeo_mensaje = "";
+        Serial.println("seteo:");
+
       }
     }
   }
@@ -194,6 +215,7 @@ void setup() {
 
   Serial.begin(bauds);
   pinMode(ledPin, OUTPUT);
+
 }
 
 void loop()
