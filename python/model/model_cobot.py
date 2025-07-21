@@ -89,8 +89,8 @@ class ModelCobot(QObject):
     def iniciar_detener_conexion(self):
         if self.conectado == False:
             try:
-                #self.ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1) #para linux, 
-                self.ser = serial.Serial("COM10",9600, timeout=1)  #PAR WINDOWS, usb frontal
+                self.ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1) #para linux, 
+                #self.ser = serial.Serial("COM10",9600, timeout=1)  #PAR WINDOWS, usb frontal
                 time.sleep(2)  # espero por las dudas, así se establece la conexión
                 self.conectado = True
                 mensaje = "iniciar" + "\n"  

@@ -41,136 +41,66 @@ bool configuracion_terminada = false;
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
 
-  String decodificar_servo(string_python);{
+  String decodificar_servo(String string_python){
 
-    return string_reconstruido;
+    return string_python;
   }
 
-  String decodificar_pap(string_python);{
+  String decodificar_pap(String string_python){
 
-    return string_reconstruido;
-  }
+    byte fin;
+    String parseo;
+    String reconstruccion = string_python.substring(0,2); // borro el "p_" y lo guardo para reconstruir
+    string_python = string_python.substring(2);  
+    String campos[6];
+
+    for (byte i = 0; i < 6; i++) {
+
+      fin = string_python.indexOf(',');
+      if ( fin != -1){
+
+        String campo = string_python.substring(0, fin); // corto el texto hasta la ","
+        campos[i] = campo;
+        string_python = string_python.substring(fin+1);  
+        reconstruccion += campo + ","; // lo agrego a la reconstrucción
+
+      }
+
+      else{
+
+        campos[i] = string_python; 
+        reconstruccion += string_python;
+
+      }
+
+      }
+
+    p++;
+    return reconstruccion;
+    }
 
 
-void setear_cobot(String datos) {
+String setear_cobot(String datos) {
 
   datos.trim();  
 
   if (datos.startsWith("p")) {
-    datos = datos.substring(2); 
-    codificacion_a_verificar = decodificar_pap(datos);
-    Serial.println(codificacion_a_verificar); //reenvío a pyhton para verificar recepción correcta
 
-    String bloque = datos.substring(0, fin);  
-    datos = datos.substring(fin + 1);         
-
-    byte idx = 0;
-    String campos[6];
-    for (byte i = 0; i < 6; i++) {
-      byte coma = bloque.indexOf(',');
-      if (coma == -1 && i < 5) {
-        Serial.println("Error: faltan campos en el comando del pap");
-        return;
-      }
-
-      if (coma == -1) {
-        campos[i] = bloque; // Último campo
-      } else {
-        campos[i] = bloque.substring(0, coma);
-        bloque = bloque.substring(coma + 1);
-      }
-    }
-
-    String nombre = campos[0];
-    byte enable = campos[1].toInt();
-    byte pasos = campos[2].toInt();
-    byte direccion = campos[3].toInt();
-    byte largo = campos[4].toInt();
-    float angulo_paso = campos[5].toFloat();
-
-    Serial.println("Nombre del pap: " + nombre);
-    Serial.println("Enable: " + String(enable));
-    Serial.println("Pasos: " + String(pasos));
-    Serial.println("Direccion: " + String(direccion));
-    Serial.println("Largo: " + String(largo));
-    Serial.println("Angulo paso: " + String(angulo_paso));
-
-    motores[p].nombre = nombre;
-    motores[p].enable = enable;
-    motores[p].pasos = pasos;
-    motores[p].direccion = direccion;
-    motores[p].largo = largo;
-    motores[p].angulo_paso = angulo_paso;
-
-    pinMode(enable, OUTPUT);
-    pinMode(pasos, OUTPUT);
-    pinMode(direccion, OUTPUT);
-
-    p++;  
+    return decodificar_pap(datos);
+    
   } 
 
     else if (datos.startsWith("s")) {
 
-      datos = datos.substring(2); 
-
-      byte fin = datos.indexOf(';'); 
-      if (fin == -1) break; 
-
-      String bloque = datos.substring(0, fin);  
-      datos = datos.substring(fin + 1);         
-
-      byte idx = 0;
-      String campos[4];
-      for (byte i = 0; i < 4; i++) {
-        byte coma = bloque.indexOf(',');
-        if (coma == -1 && i < 3) {
-
-          Serial.println("Error: faltan campos en el comando del servo");
-          return;
-
-        }
-
-        if (coma == -1) {
-
-          campos[i] = bloque; // Último campo
-        } else {
-
-          campos[i] = bloque.substring(0, coma);
-          bloque = bloque.substring(coma + 1);
-        }
-      }
-
-      String nombre = campos[0];
-      byte pin = campos[1].toInt();
-      byte largo = campos[2].toInt();
-      float angulo_paso = campos[3].toFloat();
-
-      Serial.println("Nombre del servo: " + nombre);
-      Serial.println("pin: " + String(pin));
-      Serial.println("Largo: " + String(largo));
-      Serial.println("Angulo paso: " + String(angulo_paso));
-
-      servos[s].nombre = nombre;
-      servos[s].pin = pin;
-      servos[s].largo = largo;
-      servos[s].angulo_paso = angulo_paso;
-
-      pinMode(servos[s].pin, OUTPUT);
-      servos[s].servo.attach(servos[s].pin);
-
-      s++;  
+      Serial.println("aún en desarrollo");
 
     }
     else {
 
       Serial.println("Error: prefijo desconocido");
-      break;
 
     }
   }
-
-  Serial.println("Resto del string para otros parseos: " + datos);
-}
 
 
 void esperando_seteo() {
@@ -185,7 +115,7 @@ void esperando_seteo() {
     if (Serial.available() > 0) {
 
       String mensaje = Serial.readStringUntil('\n');
-      //mensaje.trim();
+
       if (mensaje == "finalizar") {
 
         Serial.println("finalizado");
@@ -195,11 +125,23 @@ void esperando_seteo() {
       }
 
       else if (mensaje.startsWith("p_") || mensaje.startsWith("s_")) {
-        Serial.println("Seteando cobot");
-        setear_cobot(mensaje);
-        String chequeo_mensaje = "";
-        Serial.println("seteo:");
 
+        Serial.println(setear_cobot(mensaje)); //reenvío a python el mje para ver si está bien
+
+        while (Serial.available() == 0){
+          digitalWrite(ledPin, HIGH);  
+          if (Serial.available() > 0){
+
+            if (Serial.readStringUntil('\n') == "OK"){
+              Serial.println("esperando siguiente orden");
+              break;
+
+            }
+          }     
+        } //       p_base,2,3,4,0,1.8
+      }
+      else if (mensaje == "fin_seteo"){
+        break; //finaliza el seteado del cobot
       }
     }
   }
@@ -226,10 +168,13 @@ void loop()
 
     if (mensaje == "iniciar") {
       if (!isConectado) {
+
         Serial.println("iniciado");
         blinkDelay = 1000;
         isConectado = true;
         esperando_seteo();
+        Serial.println("fin del seteo!!!!!");
+        
       }
     } else if (mensaje == "finalizar") {
       Serial.println("finalizado");
