@@ -39,14 +39,10 @@ class ModelCobot(QObject):
         json_plano =""
         lista_setup =[]
         for key, value in json_cobot.items():
-            if key == str(len(json_cobot)):
-                char_final = "f"
-            else:
-                char_final = ""
             if value['motor']['tipo'] == "Paso a paso":
-                json_plano += f"{char_final}p_{value['nombre']},{value['motor']['enable']},{value['motor']['pin']},{value['motor']['direccion']},{value['largo']},{value['motor']['angulo_minimo']};"
+                json_plano += f"p_{value['nombre']},{value['motor']['enable']},{value['motor']['pin']},{value['motor']['direccion']},{value['largo']},{value['motor']['angulo_minimo']};"
             else:
-                json_plano += f"{char_final}s_{value['nombre']},{value['motor']['pin']},{value['largo']},{value['motor']['angulo_minimo']};"
+                json_plano += f"s_{value['nombre']},{value['motor']['pin']},{value['largo']},{value['motor']['angulo_minimo']};"
         print(f"json_plano: {json_plano}")
         return json_plano
         
@@ -61,16 +57,19 @@ class ModelCobot(QObject):
             if os.path.exists(path_json):
                 with open(path_json, "r") as file:
                     json_cobot = json.load(file)
-                    json_plano = self.from_json_to_arduino(json_cobot["DOF"]) #codificco de una manera plana para ocupe menos bytes posibles
-
-                    self.ser.write((json_plano + "\n").encode())
-                    time.sleep(0.5)  # Esperar por si hay respuesta
-
-                    if self.ser.in_waiting > 0:
-                        respuesta = self.ser.readline().decode().strip()
-                        print(f"Respuesta del Arduino: {respuesta}")
-                    else:
-                        print("No se recibió respuesta del Arduino.")
+                    json_plano = self.from_json_to_arduino(json_cobot["DOF"]) 
+                    json_plano_spliteado = [item for item in json_plano.split(";") if item != ""] 
+                    for eslavon in json_plano_spliteado:
+                        
+                        print(f"Enviando al Arduino: {eslavon}")
+                        self.ser.write((eslavon + "\n").encode())
+                        time.sleep(0.5)
+                    while self.ser.readline().decode().strip() != eslavon:
+                        if self.ser.in_waiting > 0:
+                            respuesta = self.ser.readline().decode().strip()
+                            print(f"Respuesta del Arduino: {respuesta}")
+                        else:
+                            print("No se recibió respuesta del Arduino.")
             else:
                 print(f"El archivo {path_json} no existe.")
         except Exception as e:

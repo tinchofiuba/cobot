@@ -41,64 +41,73 @@ bool configuracion_terminada = false;
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
 
+  String decodificar_servo(string_python);{
+
+    return string_reconstruido;
+  }
+
+  String decodificar_pap(string_python);{
+
+    return string_reconstruido;
+  }
+
+
 void setear_cobot(String datos) {
 
   datos.trim();  
 
-  while (datos.length() > 0) {
-    if (datos.startsWith("p")) {
-      datos = datos.substring(2); 
+  if (datos.startsWith("p")) {
+    datos = datos.substring(2); 
+    codificacion_a_verificar = decodificar_pap(datos);
+    Serial.println(codificacion_a_verificar); //reenvío a pyhton para verificar recepción correcta
 
-      byte fin = datos.indexOf(';'); 
-      if (fin == -1) break; 
+    String bloque = datos.substring(0, fin);  
+    datos = datos.substring(fin + 1);         
 
-      String bloque = datos.substring(0, fin);  
-      datos = datos.substring(fin + 1);         
-
-      byte idx = 0;
-      String campos[6];
-      for (byte i = 0; i < 6; i++) {
-        byte coma = bloque.indexOf(',');
-        if (coma == -1 && i < 5) {
-          Serial.println("Error: faltan campos en el comando del pap");
-          return;
-        }
-
-        if (coma == -1) {
-          campos[i] = bloque; // Último campo
-        } else {
-          campos[i] = bloque.substring(0, coma);
-          bloque = bloque.substring(coma + 1);
-        }
+    byte idx = 0;
+    String campos[6];
+    for (byte i = 0; i < 6; i++) {
+      byte coma = bloque.indexOf(',');
+      if (coma == -1 && i < 5) {
+        Serial.println("Error: faltan campos en el comando del pap");
+        return;
       }
 
-      String nombre = campos[0];
-      byte enable = campos[1].toInt();
-      byte pasos = campos[2].toInt();
-      byte direccion = campos[3].toInt();
-      byte largo = campos[4].toInt();
-      float angulo_paso = campos[5].toFloat();
+      if (coma == -1) {
+        campos[i] = bloque; // Último campo
+      } else {
+        campos[i] = bloque.substring(0, coma);
+        bloque = bloque.substring(coma + 1);
+      }
+    }
 
-      Serial.println("Nombre del pap: " + nombre);
-      Serial.println("Enable: " + String(enable));
-      Serial.println("Pasos: " + String(pasos));
-      Serial.println("Direccion: " + String(direccion));
-      Serial.println("Largo: " + String(largo));
-      Serial.println("Angulo paso: " + String(angulo_paso));
+    String nombre = campos[0];
+    byte enable = campos[1].toInt();
+    byte pasos = campos[2].toInt();
+    byte direccion = campos[3].toInt();
+    byte largo = campos[4].toInt();
+    float angulo_paso = campos[5].toFloat();
 
-      motores[p].nombre = nombre;
-      motores[p].enable = enable;
-      motores[p].pasos = pasos;
-      motores[p].direccion = direccion;
-      motores[p].largo = largo;
-      motores[p].angulo_paso = angulo_paso;
+    Serial.println("Nombre del pap: " + nombre);
+    Serial.println("Enable: " + String(enable));
+    Serial.println("Pasos: " + String(pasos));
+    Serial.println("Direccion: " + String(direccion));
+    Serial.println("Largo: " + String(largo));
+    Serial.println("Angulo paso: " + String(angulo_paso));
 
-      pinMode(enable, OUTPUT);
-      pinMode(pasos, OUTPUT);
-      pinMode(direccion, OUTPUT);
+    motores[p].nombre = nombre;
+    motores[p].enable = enable;
+    motores[p].pasos = pasos;
+    motores[p].direccion = direccion;
+    motores[p].largo = largo;
+    motores[p].angulo_paso = angulo_paso;
 
-      p++;  
-    } 
+    pinMode(enable, OUTPUT);
+    pinMode(pasos, OUTPUT);
+    pinMode(direccion, OUTPUT);
+
+    p++;  
+  } 
 
     else if (datos.startsWith("s")) {
       datos = datos.substring(2); 
@@ -112,7 +121,6 @@ void setear_cobot(String datos) {
       byte idx = 0;
       String campos[4];
       for (byte i = 0; i < 4; i++) {
-        Serial.println("aaaaaaaaaa");
         byte coma = bloque.indexOf(',');
         if (coma == -1 && i < 3) {
           Serial.println("Error: faltan campos en el comando del servo");
@@ -121,11 +129,9 @@ void setear_cobot(String datos) {
 
         if (coma == -1) {
           campos[i] = bloque; // Último campo
-          Serial.println("AAAAAA");
         } else {
           campos[i] = bloque.substring(0, coma);
           bloque = bloque.substring(coma + 1);
-          Serial.println("BBBB");
         }
       }
 
