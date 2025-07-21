@@ -13,11 +13,10 @@ byte p = 0, s = 0;
 #define MAX_PAP 6
 
 struct servoConfig {
-  String nombre;
   byte pin;
   byte largo;
   float angulo_paso;
-  Servo servo;
+  Servo nombre;
 };
 
 byte numServos = 0;
@@ -43,21 +42,51 @@ bool configuracion_terminada = false;
 
   String decodificar_servo(String string_python){
 
-    return string_python;
+    byte fin, largo_campos = 4;
+    String parseo;
+    String reconstruccion = string_python.substring(0,2); // borro el "p_" y lo guardo para reconstruir
+    string_python = string_python.substring(2);
+    
+    String campos[largo_campos];
+
+    for (byte i = 0; i < largo_campos; i++) {
+
+      fin = string_python.indexOf(',');
+      if ( fin != -1 && fin != 255){
+
+        String campo = string_python.substring(0, fin); // corto el texto hasta la ","
+        campos[i] = campo;
+        string_python = string_python.substring(fin+1);  
+        reconstruccion += campo + ","; // lo agrego a la reconstrucción
+
+      }
+
+      else{
+
+        campos[i] = string_python; 
+        reconstruccion += string_python;
+
+      }
+
+      }
+
+    s++;
+    return reconstruccion;
   }
 
   String decodificar_pap(String string_python){
 
-    byte fin;
+    byte fin, largo_campos = 6;
     String parseo;
     String reconstruccion = string_python.substring(0,2); // borro el "p_" y lo guardo para reconstruir
     string_python = string_python.substring(2);  
-    String campos[6];
+    String campos[largo_campos];
 
-    for (byte i = 0; i < 6; i++) {
+    for (byte i = 0; i < largo_campos; i++) {
 
       fin = string_python.indexOf(',');
-      if ( fin != -1){
+
+      if ( fin != -1 && fin != 255){
 
         String campo = string_python.substring(0, fin); // corto el texto hasta la ","
         campos[i] = campo;
@@ -79,7 +108,6 @@ bool configuracion_terminada = false;
     return reconstruccion;
     }
 
-
 String setear_cobot(String datos) {
 
   datos.trim();  
@@ -92,7 +120,7 @@ String setear_cobot(String datos) {
 
     else if (datos.startsWith("s")) {
 
-      Serial.println("aún en desarrollo");
+      return decodificar_servo(datos);
 
     }
     else {
@@ -133,7 +161,6 @@ void esperando_seteo() {
           if (Serial.available() > 0){
 
             if (Serial.readStringUntil('\n') == "OK"){
-              Serial.println("esperando siguiente orden");
               break;
 
             }

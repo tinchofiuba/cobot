@@ -43,7 +43,9 @@ class ModelCobot(QObject):
                 json_plano += f"p_{value['nombre']},{value['motor']['enable']},{value['motor']['pin']},{value['motor']['direccion']},{value['largo']},{value['motor']['angulo_minimo']};"
             else:
                 json_plano += f"s_{value['nombre']},{value['motor']['pin']},{value['largo']},{value['motor']['angulo_minimo']};"
+        print("")
         print(f"json_plano: {json_plano}")
+        print("")
         return json_plano
         
            
@@ -60,16 +62,21 @@ class ModelCobot(QObject):
                     json_plano = self.from_json_to_arduino(json_cobot["DOF"]) 
                     json_plano_spliteado = [item for item in json_plano.split(";") if item != ""] 
                     for eslavon in json_plano_spliteado:
-                        
                         print(f"Enviando al Arduino: {eslavon}")
                         self.ser.write((eslavon + "\n").encode())
-                        time.sleep(0.5)
-                    while self.ser.readline().decode().strip() != eslavon:
-                        if self.ser.in_waiting > 0:
+                        time.sleep(0.5)  
+
+                        while True:
                             respuesta = self.ser.readline().decode().strip()
                             print(f"Respuesta del Arduino: {respuesta}")
-                        else:
-                            print("No se recibió respuesta del Arduino.")
+                            if respuesta == eslavon:
+                                print(f"Arduino ha recibido correctamente: {eslavon}")
+                                self.ser.write(b"OK\n") 
+                                print("")
+                                break
+                            else:
+                                print("Esperando confirmación correcta del Arduino...")
+
             else:
                 print(f"El archivo {path_json} no existe.")
         except Exception as e:
@@ -102,7 +109,7 @@ class ModelCobot(QObject):
                     respuesta = self.ser.readline().decode().strip()
                     if respuesta == "iniciado":
                         self.conexion_signal.emit(self.conectado)    
-                        print(f"Se ha establecido la conexxión con el controlador")
+                        print(f"Se ha establecido la conexión con el controlador")
                     else:
                         print(f"Respuesta del Arduino: {respuesta}, no es la esperada ...")
                 else:
