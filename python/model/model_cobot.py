@@ -29,6 +29,7 @@ class ModelCobot(QObject):
     
     ## signals
     conexion_signal = pyqtSignal(bool)  
+    eslavon_guardado = pyqtSignal(bool)  
     
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -62,13 +63,13 @@ class ModelCobot(QObject):
                     json_plano = self.from_json_to_arduino(json_cobot["DOF"]) 
                     json_plano_spliteado = [item for item in json_plano.split(";") if item != ""] 
                     for eslavon in json_plano_spliteado:
-                        print(f"Enviando al Arduino: {eslavon}")
+                        print(f"----->   Enviando al Arduino: {eslavon}")
                         self.ser.write((eslavon + "\n").encode())
                         time.sleep(0.5)  
 
                         while True:
                             respuesta = self.ser.readline().decode().strip()
-                            print(f"Respuesta del Arduino: {respuesta}")
+                            print(f"Respuesta del Arduino: {respuesta}  <-----")
                             if respuesta == eslavon:
                                 print(f"Arduino ha recibido correctamente: {eslavon}")
                                 self.ser.write(b"OK\n") 
@@ -89,7 +90,27 @@ class ModelCobot(QObject):
             self.datos_actualizados.emit(self.datos)
         except json.JSONDecodeError as e:
             print(f"Error al decodificar JSON: {e}")
+            
+    def guardar_eslavon(self,numero_de_eslavon : str,datos_eslavon : dict):
+        try:
 
+            if numero_de_eslavon not in self.json_ultimo_cobot.get("DOF", {}):
+                self.json_ultimo_cobot["DOF"][numero_de_eslavon] = datos_eslavon
+
+            else:
+                self.json_ultimo_cobot["DOF"][numero_de_eslavon].update(datos_eslavon)
+
+            with open("python/model/json/json_cobot.json", "w") as file:
+                json.dump(self.json_ultimo_cobot, file, indent=4)
+                
+                self.datos_actualizados.emit(self.json_ultimo_cobot)
+            self.eslavon_guardado.emit(True)
+        
+        except:
+            print("Error al obtener el valor del selector DOF.")
+            self.eslavon_guardado.emit(False)
+
+        
     def iniciar_rutina(self, mensaje):
         print("iniciando rutina")
         

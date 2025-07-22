@@ -1,11 +1,55 @@
 {
-"nombre": "carlita",
-"descripcion": "cobot de prueba",
-"DOF": {
-    "1": {"nombre": "base", "largo" : 0, "rotacion": "z", "motor": {"tipo": "Paso a paso", "enable": 2, "pin": 3, "direccion": 4, "angulo_minimo": 1.8}},
-    "2": {"nombre": "antebrazo", "largo" : 15, "rotacion": "x", "motor": {"tipo": "Servomotor", "pin": 3, "angulo_minimo": 1}},
-    "3": {"nombre": "brazo", "largo" : 12, "rotacion": "x", "motor": {"tipo": "Servomotor", "pin": 4, "angulo_minimo": 1}},
-    "4": {"nombre": "muneca", "largo" : 8, "rotacion": "y", "motor": {"tipo": "Servomotor", "pin": 5, "angulo_minimo": 1}}
-       },
-"movimientos": ["mover a (10,10,10)","mover a (20,20,20)", "mover a (30,30,30)"]
+    "nombre": "carlita",
+    "descripcion": "cobot de prueba",
+    "DOF": {
+        "1": {
+            "nombre": "Cintura",
+            "largo": 150.0,
+            "rotacion": "z",
+            "motor": {
+                "tipo": "Paso a paso",
+                "pin": 3,
+                "direccion": 4,
+                "enable": 3,
+                "angulo_minimo": 1.8
+            }
+        },
+        "2": {
+            "nombre": "antebrazo",
+            "largo": 15.0,
+            "rotacion": "x",
+            "motor": {
+                "tipo": "Servomotor",
+                "pin": 3,
+                "direccion": 0,
+                "enable": 2,
+                "angulo_minimo": 1.0
+            }
+        },
+        "3": {
+            "nombre": "brazo",
+            "largo": 12,
+            "rotacion": "x",
+            "motor": {
+                "tipo": "Servomotor",
+                "pin": 4,
+                "angulo_minimo": 1
+            }
+        },
+        "4": {
+            "nombre": "muneca",
+            "largo": 8,
+            "rotacion": "y",
+            "motor": {
+                "tipo": "Servomotor",
+                "pin": 5,
+                "angulo_minimo": 1
+            }
+        }
+    },
+    "movimientos": [
+        "mover a (10,10,10)",
+        "mover a (20,20,20)",
+        "mover a (30,30,30)"
+    ]
 }

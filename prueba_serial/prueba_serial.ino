@@ -41,7 +41,7 @@ bool configuracion_terminada = false;
 
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
-mover_cobot(String ordenes){
+void mover_cobot(String ordenes){
   digitalWrite(ledPin, HIGH);
 }
 
