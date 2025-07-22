@@ -13,10 +13,12 @@ byte p = 0, s = 0;
 #define MAX_PAP 6
 
 struct servoConfig {
+  String nombre;
   byte pin;
   byte largo;
   float angulo_paso;
-  Servo nombre;
+  Servo objeto;
+  
 };
 
 byte numServos = 0;
@@ -40,7 +42,7 @@ bool configuracion_terminada = false;
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
 
-  String decodificar_servo(String string_python){
+  String decodificar_servo(String string_python){ //decodificación y reconstrucción del mensaje para setear un servo
 
     byte fin, largo_campos = 4;
     String parseo;
@@ -67,14 +69,32 @@ bool configuracion_terminada = false;
         reconstruccion += string_python;
 
       }
-
       }
 
+    for (byte i = 0; i < largo_campos; i++){
+
+      switch (i) {
+        case 0:
+          servos[p].nombre = campos[i]; 
+          break;
+        case 1:
+          servos[p].pin = campos[i].toInt();
+          servos[p].objeto.attach(servos[p].pin);
+          break;
+        case 2:
+          servos[p].largo = campos[i].toInt(); 
+          break;
+        case 3:
+          servos[p].angulo_paso = campos[i].toInt(); 
+          break;
+      }
+      
+    }
     s++;
     return reconstruccion;
   }
 
-  String decodificar_pap(String string_python){
+  String decodificar_pap(String string_python){ //decodificación y reconstrucción del mensaje para setear un paso a paso
 
     byte fin, largo_campos = 6;
     String parseo;
@@ -92,7 +112,6 @@ bool configuracion_terminada = false;
         campos[i] = campo;
         string_python = string_python.substring(fin+1);  
         reconstruccion += campo + ","; // lo agrego a la reconstrucción
-
       }
 
       else{
@@ -103,6 +122,31 @@ bool configuracion_terminada = false;
       }
 
       }
+    
+    for (byte i = 0; i < largo_campos; i++){
+
+      switch (i) {
+        case 0:
+          motores[p].nombre = campos[i]; 
+          break;
+        case 1:
+          motores[p].enable = campos[i].toInt();
+          break;
+        case 2:
+          motores[p].pasos = campos[i].toInt(); 
+          break;
+        case 3:
+          motores[p].direccion = campos[i].toInt(); 
+          break;
+        case 4:
+          motores[p].largo = campos[i].toInt(); 
+          break;
+        case 5:
+          motores[p].angulo_paso = campos[i].toFloat(); 
+          break;
+      }
+      
+    }
 
     p++;
     return reconstruccion;
