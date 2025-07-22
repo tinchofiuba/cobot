@@ -41,116 +41,119 @@ bool configuracion_terminada = false;
 
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
+mover_cobot(String ordenes){
+  digitalWrite(ledPin, HIGH);
+}
 
-  String decodificar_servo(String string_python){ //decodificación y reconstrucción del mensaje para setear un servo
+String decodificar_servo(String string_python){ //decodificación y reconstrucción del mensaje para setear un servo
 
-    byte fin, largo_campos = 4;
-    String parseo;
-    String reconstruccion = string_python.substring(0,2); // borro el "p_" y lo guardo para reconstruir
-    string_python = string_python.substring(2);
-    
-    String campos[largo_campos];
+  byte fin, largo_campos = 4;
+  String parseo;
+  String reconstruccion = string_python.substring(0,2); // borro el "p_" y lo guardo para reconstruir
+  string_python = string_python.substring(2);
+  
+  String campos[largo_campos];
 
-    for (byte i = 0; i < largo_campos; i++) {
+  for (byte i = 0; i < largo_campos; i++) {
 
-      fin = string_python.indexOf(',');
-      if ( fin != -1 && fin != 255){
+    fin = string_python.indexOf(',');
+    if ( fin != -1 && fin != 255){
 
-        String campo = string_python.substring(0, fin); // corto el texto hasta la ","
-        campos[i] = campo;
-        string_python = string_python.substring(fin+1);  
-        reconstruccion += campo + ","; // lo agrego a la reconstrucción
+      String campo = string_python.substring(0, fin); // corto el texto hasta la ","
+      campos[i] = campo;
+      string_python = string_python.substring(fin+1);  
+      reconstruccion += campo + ","; // lo agrego a la reconstrucción
 
-      }
-
-      else{
-
-        campos[i] = string_python; 
-        reconstruccion += string_python;
-
-      }
-      }
-
-    for (byte i = 0; i < largo_campos; i++){
-
-      switch (i) {
-        case 0:
-          servos[p].nombre = campos[i]; 
-          break;
-        case 1:
-          servos[p].pin = campos[i].toInt();
-          servos[p].objeto.attach(servos[p].pin);
-          break;
-        case 2:
-          servos[p].largo = campos[i].toInt(); 
-          break;
-        case 3:
-          servos[p].angulo_paso = campos[i].toInt(); 
-          break;
-      }
-      
     }
-    s++;
-    return reconstruccion;
+
+    else{
+
+      campos[i] = string_python; 
+      reconstruccion += string_python;
+
+    }
+    }
+
+  for (byte i = 0; i < largo_campos; i++){
+
+    switch (i) {
+      case 0:
+        servos[p].nombre = campos[i]; 
+        break;
+      case 1:
+        servos[p].pin = campos[i].toInt();
+        servos[p].objeto.attach(servos[p].pin);
+        break;
+      case 2:
+        servos[p].largo = campos[i].toInt(); 
+        break;
+      case 3:
+        servos[p].angulo_paso = campos[i].toInt(); 
+        break;
+    }
+    
+  }
+  s++;
+  return reconstruccion;
+}
+
+String decodificar_pap(String string_python){ //decodificación y reconstrucción del mensaje para setear un paso a paso
+
+  byte fin, largo_campos = 6;
+  String parseo;
+  String reconstruccion = string_python.substring(0,2); // borro el "p_" y lo guardo para reconstruir
+  string_python = string_python.substring(2);  
+  String campos[largo_campos];
+
+  for (byte i = 0; i < largo_campos; i++) {
+
+    fin = string_python.indexOf(',');
+
+    if ( fin != -1 && fin != 255){
+
+      String campo = string_python.substring(0, fin); // corto el texto hasta la ","
+      campos[i] = campo;
+      string_python = string_python.substring(fin+1);  
+      reconstruccion += campo + ","; // lo agrego a la reconstrucción
+    }
+
+    else{
+
+      campos[i] = string_python; 
+      reconstruccion += string_python;
+
+    }
+
+    }
+  
+  for (byte i = 0; i < largo_campos; i++){
+
+    switch (i) {
+      case 0:
+        motores[p].nombre = campos[i]; 
+        break;
+      case 1:
+        motores[p].enable = campos[i].toInt();
+        break;
+      case 2:
+        motores[p].pasos = campos[i].toInt(); 
+        break;
+      case 3:
+        motores[p].direccion = campos[i].toInt(); 
+        break;
+      case 4:
+        motores[p].largo = campos[i].toInt(); 
+        break;
+      case 5:
+        motores[p].angulo_paso = campos[i].toFloat(); 
+        break;
+    }
+    
   }
 
-  String decodificar_pap(String string_python){ //decodificación y reconstrucción del mensaje para setear un paso a paso
-
-    byte fin, largo_campos = 6;
-    String parseo;
-    String reconstruccion = string_python.substring(0,2); // borro el "p_" y lo guardo para reconstruir
-    string_python = string_python.substring(2);  
-    String campos[largo_campos];
-
-    for (byte i = 0; i < largo_campos; i++) {
-
-      fin = string_python.indexOf(',');
-
-      if ( fin != -1 && fin != 255){
-
-        String campo = string_python.substring(0, fin); // corto el texto hasta la ","
-        campos[i] = campo;
-        string_python = string_python.substring(fin+1);  
-        reconstruccion += campo + ","; // lo agrego a la reconstrucción
-      }
-
-      else{
-
-        campos[i] = string_python; 
-        reconstruccion += string_python;
-
-      }
-
-      }
-    
-    for (byte i = 0; i < largo_campos; i++){
-
-      switch (i) {
-        case 0:
-          motores[p].nombre = campos[i]; 
-          break;
-        case 1:
-          motores[p].enable = campos[i].toInt();
-          break;
-        case 2:
-          motores[p].pasos = campos[i].toInt(); 
-          break;
-        case 3:
-          motores[p].direccion = campos[i].toInt(); 
-          break;
-        case 4:
-          motores[p].largo = campos[i].toInt(); 
-          break;
-        case 5:
-          motores[p].angulo_paso = campos[i].toFloat(); 
-          break;
-      }
-      
-    }
-
-    p++;
-    return reconstruccion;
-    }
+  p++;
+  return reconstruccion;
+  }
 
 String setear_cobot(String datos) {
 
@@ -244,11 +247,23 @@ void loop()
         blinkDelay = 1000;
         isConectado = true;
         esperando_seteo();
-        Serial.println("fin del seteo!!!!!");
         
       }
-    } else if (mensaje == "finalizar") {
+
+    } 
+    
+    else if (mensaje.startsWith("m_")) {
+
+      mensaje = mensaje.substring(2); 
+      mover_cobot(mensaje);
+      Serial.println("finalizado");
+
+    }
+    
+    else if (mensaje == "finalizar") {
+
       Serial.println("finalizado");
     }
+
   }
 }
