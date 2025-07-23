@@ -93,7 +93,6 @@ class ModelCobot(QObject):
             
     def guardar_eslavon(self,numero_de_eslavon : str,datos_eslavon : dict):
         try:
-
             if numero_de_eslavon not in self.json_ultimo_cobot.get("DOF", {}):
                 self.json_ultimo_cobot["DOF"][numero_de_eslavon] = datos_eslavon
 
@@ -103,7 +102,6 @@ class ModelCobot(QObject):
             with open("python/model/json/json_cobot.json", "w") as file:
                 json.dump(self.json_ultimo_cobot, file, indent=4)
                 
-                self.datos_actualizados.emit(self.json_ultimo_cobot)
             self.eslavon_guardado.emit(True)
         
         except:

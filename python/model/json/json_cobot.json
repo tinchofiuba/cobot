@@ -3,14 +3,14 @@
     "descripcion": "cobot de prueba",
     "DOF": {
         "1": {
-            "nombre": "Cintura",
+            "nombre": "rodilla",
             "largo": 150.0,
             "rotacion": "z",
             "motor": {
                 "tipo": "Paso a paso",
                 "pin": 3,
-                "direccion": 4,
-                "enable": 3,
+                "direccion": 8,
+                "enable": 2,
                 "angulo_minimo": 1.8
             }
         },
@@ -38,12 +38,36 @@
         },
         "4": {
             "nombre": "muneca",
-            "largo": 8,
+            "largo": 8.0,
             "rotacion": "y",
             "motor": {
-                "tipo": "Servomotor",
+                "tipo": "Paso a paso",
                 "pin": 5,
-                "angulo_minimo": 1
+                "direccion": 0,
+                "enable": 0,
+                "angulo_minimo": 1.0
+            }
+        },
+        "5": {
+            "nombre": "muneca",
+            "largo": 8.0,
+            "motor": {
+                "tipo": "Paso a paso",
+                "pin": 3,
+                "direccion": 4,
+                "enable": 2,
+                "angulo_minimo": 1.8
+            }
+        },
+        "6": {
+            "nombre": "muneca",
+            "largo": 8.0,
+            "motor": {
+                "tipo": "Paso a paso",
+                "pin": 3,
+                "direccion": 4,
+                "enable": 2,
+                "angulo_minimo": 1.8
             }
         }
     },

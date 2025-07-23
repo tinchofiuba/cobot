@@ -214,6 +214,14 @@ class view(Ui_Dialog, QDialog):
                 "enable": int(self.le_pin_enable_eslavon.text()),
                 "angulo_minimo": float(self.le_angulo_minimo_eslavon.text())
             }
+        } if self.pb_seleccion_motor.text() == "Paso a paso" else {
+            "nombre": self.le_nombre_eslavon.text(),
+            "largo": float(self.le_largo_eslavon.text()),
+            "motor": {
+                "tipo": self.pb_seleccion_motor.text(),
+                "pin": int(self.le_pin_pasos_eslavon.text()),
+                "angulo_minimo": float(self.le_angulo_minimo_eslavon.text())
+            }
         }
         self.model.guardar_eslavon(str(self.hs_selector_DOF.value()), self.datos_eslavon)
 
