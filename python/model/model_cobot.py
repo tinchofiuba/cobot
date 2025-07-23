@@ -41,6 +41,7 @@ class ModelCobot(QObject):
     json_cobots_guardados = cobots_guardados # json de los cobots guardados, se carga al iniciar la clase
     cobot_guardado_signal = pyqtSignal(bool)  # Emite True si se guardó el cobot correctamente, False si hubo un error al guardar.
     poblar_lw_cobots_signal = pyqtSignal(list, list)
+    cobot_borrado_signal = pyqtSignal(bool)  # Emite True si se borró el cobot correctamente, False si hubo un error al borrar.
 
     ## signals
     conexion_signal = pyqtSignal(bool)  
@@ -121,6 +122,17 @@ class ModelCobot(QObject):
         
         with open(path_cobots_guardados, "w") as file:
             json.dump(self.json_cobots_guardados, file, indent=4)
+            
+    def borrar_cobot(self, nombre_cobot: str):
+        if nombre_cobot in self.json_cobots_guardados:
+            del self.json_cobots_guardados[nombre_cobot]
+            with open(path_cobots_guardados, "w") as file:
+                json.dump(self.json_cobots_guardados, file, indent=4)
+            print(f"Cobot {nombre_cobot} eliminado de los cobots guardados.")
+            self.cobot_borrado_signal.emit(True)
+        else:
+            self.cobot_borrado_signal.emit(False)
+            print(f"El cobot {nombre_cobot} no existe en los cobots guardados.")
             
     def cargar_datos_cobots(self):
         try:

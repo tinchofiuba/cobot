@@ -20,7 +20,7 @@ class DialogGestionarCobots(Ui_Dialog_GestionarCobots, QDialog):
         self.funcionalidad_lw()
         
     def funcionalidad_pb(self):
-        print("aún en desarrollo")
+        self.pb_borrar_cobot.clicked.connect(lambda: self.model.borrar_cobot(self.lw_cobots_guardados.currentItem().text()))
 
     def mostrar_descripcion_cobot(self, row):
         if 0 <= row < len(self.lista_descripciones):
@@ -36,7 +36,16 @@ class DialogGestionarCobots(Ui_Dialog_GestionarCobots, QDialog):
         #le cambio el tamaño al textedit
         self.te_descripcion_cobot.setStyleSheet("font-size: 12px;")
         
+    def cobot_borrado(self, condicion : bool):
+        if condicion:
+            QMessageBox.information(self, "Éxito", "Cobot borrado correctamente.")
+            self.model.cargar_datos_cobots()
+
+        else:
+            QMessageBox.warning(self, "Error", "No se pudo borrar el Cobot. Verifique que no esté en uso.")
+        
     def funcionalidad_signals(self):
+        self.model.cobot_borrado_signal.connect(self.cobot_borrado) 
         self.model.poblar_lw_cobots_signal.connect(self.poblar_lw_cobots)
         
     def poblar_lw_cobots(self,lista_cobots_guardados, lista_descripciones):
