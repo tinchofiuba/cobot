@@ -2,10 +2,55 @@
 from .default_cobot import Ui_Dialog
 from ..model.model_cobot import ModelCobot
 from .agregar_movimientos import Ui_Dialog as Ui_Dialog_Movimiento
+from .gestionar_cobots import Ui_Dialog as Ui_Dialog_GestionarCobots
 
-from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QMessageBox, QListWidgetItem
 from PyQt5.QtCore import pyqtSignal, QTimer
 
+
+class DialogGestionarCobots(Ui_Dialog_GestionarCobots, QDialog):
+    
+    def __init__(self, model, parent = None):
+        super(DialogGestionarCobots, self).__init__(parent)
+        self.setupUi(self)
+        self.model = model
+        self.funcionalidad_signals()
+        self.config_iniciales()
+        self.funcionalidad_pb()
+        self.funcionalidad_lw()
+        
+    def funcionalidad_pb(self):
+        print("aún en desarrollo")
+
+    def mostrar_descripcion_cobot(self, row):
+        if 0 <= row < len(self.lista_descripciones):
+            self.te_descripcion_cobot.setPlainText(self.lista_descripciones[row])
+        else:
+            self.te_descripcion_cobot.clear()
+        
+    def funcionalidad_lw(self):
+        self.lw_cobots_guardados.currentRowChanged.connect(self.mostrar_descripcion_cobot)
+        
+    def config_iniciales(self):
+        self.model.cargar_datos_cobots()
+        #le cambio el tamaño al textedit
+        self.te_descripcion_cobot.setStyleSheet("font-size: 12px;")
+        
+    def funcionalidad_signals(self):
+        self.model.poblar_lw_cobots_signal.connect(self.poblar_lw_cobots)
+        
+    def poblar_lw_cobots(self,lista_cobots_guardados, lista_descripciones):
+        self.lista_descripciones = lista_descripciones
+        self.lista_cobots_guardados = lista_cobots_guardados
+        
+        self.lw_cobots_guardados.clear()
+        if not lista_cobots_guardados:
+            self.lw_cobots_guardados.addItem("No hay cobots guardados.")
+        else:
+            self.lw_cobots_guardados.addItems(lista_cobots_guardados)
+            self.te_descripcion_cobot.setPlainText(lista_descripciones[0])
+
+        self.te_descripcion_cobot.clear()
 
 class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
     
@@ -269,6 +314,9 @@ class view(Ui_Dialog, QDialog):
         datos_cobot = self.armar_diccionario_cobot_desde_gui_y_json()
         self.model.guardar_cobot(datos_cobot["nombre"], False, datos_cobot)
 
+    def cargar_cobot(self):
+        dialog = DialogGestionarCobots(self.model, self)
+        dialog.exec_()
 
     def funcionalidad_pb(self):
         self.pb_seleccion_motor.clicked.connect(self.actualizar_motor)
@@ -280,6 +328,7 @@ class view(Ui_Dialog, QDialog):
         self.pb_setear_cobot.clicked.connect(lambda: self.model.setear_cobot_en_arduino())
         self.pb_guardar_eslavon.clicked.connect(self.guardar_eslavon)
         self.pb_guardar_cobot.clicked.connect(self.guardar_cobot)
+        self.pb_cargar_cobot.clicked.connect(self.cargar_cobot)
         
     def funcionalidad_hs(self):
         self.hs_numero_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))

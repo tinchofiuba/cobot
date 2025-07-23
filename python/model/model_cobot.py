@@ -16,7 +16,7 @@ if os.path.exists(path_json):
     with open(path_json, "r") as file:
         try:
             ultimo_cobot = json.load(file)  
-            print("Datos cargados:", ultimo_cobot)
+            print("se ha cargado el json asociado al ultimo cobot utilizado")
         except json.JSONDecodeError as e:
             print(f"Error al decodificar JSON: {e}")
 else:
@@ -27,7 +27,7 @@ if os.path.exists(path_cobots_guardados):
     with open(path_cobots_guardados, "r") as file:
         try:
             cobots_guardados = json.load(file)  
-            print("Cobots guardados cargados:", cobots_guardados)
+            print("se ha cargado el json de los cobots guardados")
         except json.JSONDecodeError as e:
             print(f"Error al decodificar JSON: {e}")
 else:
@@ -40,6 +40,7 @@ class ModelCobot(QObject):
     json_ultimo_cobot = ultimo_cobot # json del ultimo cobot importado en instancia de clase
     json_cobots_guardados = cobots_guardados # json de los cobots guardados, se carga al iniciar la clase
     cobot_guardado_signal = pyqtSignal(bool)  # Emite True si se guardó el cobot correctamente, False si hubo un error al guardar.
+    poblar_lw_cobots_signal = pyqtSignal(list, list)
 
     ## signals
     conexion_signal = pyqtSignal(bool)  
@@ -49,7 +50,6 @@ class ModelCobot(QObject):
     def __init__(self, parent = None):
         super().__init__(parent)
         self.conectado = False
-        print(self.json_ultimo_cobot)
         
     def from_json_to_arduino(self, json_cobot):
         json_plano =""
@@ -121,6 +121,45 @@ class ModelCobot(QObject):
         
         with open(path_cobots_guardados, "w") as file:
             json.dump(self.json_cobots_guardados, file, indent=4)
+            
+    def cargar_datos_cobots(self):
+        try:
+            with open(path_cobots_guardados, "r") as file:
+                self.json_cobots_guardados = json.load(file)
+                print("Se ha cargado el JSON de los cobots guardados.")
+                
+            lista_cobots_guardados = list(self.json_cobots_guardados.keys())
+
+            ''''
+            descripción del cobot guardado.
+            
+            Nº de DOF  = valor
+            Nº servos = valor
+            Nª motores paso a paso = valor
+            '''
+            
+            lista_descripciones = []
+            for nombre_cobot, datos_cobot in self.json_cobots_guardados.items():
+                descripcion = datos_cobot.get("descripcion", "")
+                num_dof = len(datos_cobot.get("DOF", {}))
+                num_servos = sum(1 for eslavon in datos_cobot.get("DOF", {}).values() if eslavon.get("motor", {}).get("tipo") == "Servo motor")
+                num_paso_a_paso = sum(1 for eslavon in datos_cobot.get("DOF", {}).values() if eslavon.get("motor", {}).get("tipo") == "Paso a paso")
+                
+                descripcion = (
+                    "Descripción:\n"
+                    f"{descripcion}\n"
+                    "\n"
+                    "Detalles:\n"
+                    f"DOF = {num_dof}\n"
+                    f"Nº servos = {num_servos}\n"
+                    f"Nº paso a paso = {num_paso_a_paso}")
+                lista_descripciones.append(descripcion)
+            print(f"descripciones: {lista_descripciones}")
+            print(f"cobots guardados: {lista_cobots_guardados}")
+            self.poblar_lw_cobots_signal.emit(lista_cobots_guardados, lista_descripciones)
+                
+        except FileNotFoundError:
+            print(f"El archivo {path_cobots_guardados} no existe. No se pueden cargar los cobots guardados.")
       
     def guardar_cobot(self, nombre_cobot: str, forzar_guardado: bool, datos_cobot: dict):
         try:

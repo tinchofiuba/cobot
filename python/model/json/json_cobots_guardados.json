@@ -8,10 +8,8 @@
                 "largo": 0.0,
                 "rotacion": "z",
                 "motor": {
-                    "tipo": "Paso a paso",
+                    "tipo": "Servo motor",
                     "pin": 3,
-                    "direccion": 4,
-                    "enable": 2,
                     "angulo_minimo": 1.8
                 }
             },
@@ -35,6 +33,56 @@
                     "pin": 6,
                     "direccion": 5,
                     "enable": 7,
+                    "angulo_minimo": 1.8
+                }
+            }
+        }
+    },
+    "carlita": {
+        "nombre": "carlita",
+        "descripcion": "es una segunda prueba para ver si funcona",
+        "DOF": {
+            "1": {
+                "nombre": "Cintura",
+                "largo": 0.0,
+                "rotacion": "z",
+                "motor": {
+                    "tipo": "Servo motor",
+                    "pin": 3,
+                    "angulo_minimo": 1.8
+                }
+            },
+            "2": {
+                "nombre": "codo",
+                "largo": 15.0,
+                "rotacion": "x",
+                "motor": {
+                    "tipo": "Paso a paso",
+                    "pin": 2,
+                    "direccion": 4,
+                    "enable": 3,
+                    "angulo_minimo": 1.8
+                }
+            },
+            "3": {
+                "nombre": "cabeza",
+                "largo": 11.0,
+                "motor": {
+                    "tipo": "Paso a paso",
+                    "pin": 6,
+                    "direccion": 5,
+                    "enable": 7,
+                    "angulo_minimo": 1.8
+                }
+            },
+            "4": {
+                "nombre": "saas",
+                "largo": 1.0,
+                "motor": {
+                    "tipo": "Paso a paso",
+                    "pin": 1,
+                    "direccion": 1,
+                    "enable": 1,
                     "angulo_minimo": 1.8
                 }
             }
