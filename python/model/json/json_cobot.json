@@ -27,9 +27,8 @@
             }
         },
         "3": {
-            "nombre": "brazo",
-            "largo": 12.0,
-            "rotacion": "x",
+            "nombre": "setear!",
+            "largo": 11.0,
             "motor": {
                 "tipo": "Paso a paso",
                 "pin": 9,
@@ -39,9 +38,8 @@
             }
         },
         "4": {
-            "nombre": "muneca",
-            "largo": 8.0,
-            "rotacion": "y",
+            "nombre": "setear!",
+            "largo": 0.0,
             "motor": {
                 "tipo": "Paso a paso",
                 "pin": 12,
@@ -51,24 +49,13 @@
             }
         },
         "5": {
-            "nombre": "muneca",
-            "largo": 8.0,
+            "nombre": "setear!",
+            "largo": 1.0,
             "motor": {
                 "tipo": "Paso a paso",
-                "pin": 3,
-                "direccion": 4,
-                "enable": 2,
-                "angulo_minimo": 1.8
-            }
-        },
-        "6": {
-            "nombre": "muneca",
-            "largo": 8.0,
-            "motor": {
-                "tipo": "Paso a paso",
-                "pin": 3,
-                "direccion": 4,
-                "enable": 2,
+                "pin": 15,
+                "direccion": 16,
+                "enable": 14,
                 "angulo_minimo": 1.8
             }
         }

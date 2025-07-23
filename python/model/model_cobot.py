@@ -57,7 +57,7 @@ class ModelCobot(QObject):
             print("No hay conexión con el Arduino. Conectarse primero!.")
             return
         try:
-            path_json = "python/model/json/json_cobot.json" #cambiar esto!!
+            path_json = "python/model/json/json_cobot.json" 
             if os.path.exists(path_json):
                 with open(path_json, "r") as file:
                     json_cobot = json.load(file)
@@ -79,6 +79,7 @@ class ModelCobot(QObject):
                                 break
                             else:
                                 print("Esperando confirmación correcta del Arduino...")
+                    self.ser.write(b"fin_seteo\n")
 
             else:
                 print(f"El archivo {path_json} no existe.")
@@ -97,8 +98,17 @@ class ModelCobot(QObject):
         else:
             print(f"El eslavón {numero_de_eslavon} no existe en el JSON.")
             
-    def guardar_eslavon(self,numero_de_eslavon : str,datos_eslavon : dict):
+    def guardar_eslavon(self,numero_de_DOF : str, numero_de_eslavon : str,datos_eslavon : dict):
         try:
+            
+            # si cambio el numero de DOF borro del dict los valores mayores al numero de DOF
+            
+            if len(self.json_ultimo_cobot["DOF"]) > int(numero_de_DOF):
+                #borro cualquier DOF mayor al numero_de_DOF
+                for key in list(self.json_ultimo_cobot["DOF"].keys()):
+                    if int(key) > int(numero_de_DOF):
+                        del self.json_ultimo_cobot["DOF"][key]
+            
             if numero_de_eslavon not in self.json_ultimo_cobot.get("DOF", {}):
                 self.json_ultimo_cobot["DOF"][numero_de_eslavon] = datos_eslavon
 

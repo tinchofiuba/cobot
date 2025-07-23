@@ -237,33 +237,38 @@ void loop()
 {
 
   if (Serial.available() > 0) {
+
+    digitalWrite(ledPin,HIGH);
+    delay(200);
+    digitalWrite(ledPin,LOW);
+    delay(200);
+
     String mensaje = Serial.readStringUntil('\n');
     mensaje.trim();  // Elimina espacios en blanco o caracteres extra
 
     if (mensaje == "iniciar") {
       if (!isConectado) {
-
         Serial.println("iniciado");
         blinkDelay = 1000;
         isConectado = true;
         esperando_seteo();
-        
       }
-
     } 
     
     else if (mensaje.startsWith("m_")) {
-
       mensaje = mensaje.substring(2); 
       mover_cobot(mensaje);
       Serial.println("finalizado");
-
     }
     
     else if (mensaje == "finalizar") {
-
       Serial.println("finalizado");
     }
-
   }
+
+  //digitalWrite(ledPin,HIGH);
+  //delay(20);
+  //digitalWrite(ledPin,LOW);
+  //delay(20);
+
 }

@@ -67,7 +67,7 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
     def funcionalidad_le(self,condicion: str):
         if condicion == "change":
             for le in [self.le_x, self.le_y, self.le_z]:
-                le.textChanged.connect(lambda: self.validar_line_edits(le))
+                le.textChanged.connect(lambda: self.validar_line_edits())
         elif condicion == "check":
             #me fijo si todos los los le que estan en la lista estan llenos, si es así habilito el pb_agregar_movimiento con la función all()
             if all(le.text() for le in [self.le_x, self.le_y, self.le_z]):
@@ -78,7 +78,6 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
                 
         
     def validar_line_edits(self, le):
-        print("cambio")
         if le.text()== "":
             self.pb_agregar_movimiento.setEnabled(False)
             print("boton deshabilitado")
@@ -91,7 +90,7 @@ class view(Ui_Dialog, QDialog):
     def __init__(self, parent=None):
         super(view, self).__init__(parent)
         self.setupUi(self)
-        self.lista_line_edits = [self.le_nombre_cobot, self.le_nombre_eslavon]
+        self.lista_line_edits = [self.le_nombre_cobot, self.le_nombre_eslavon, self.le_largo_eslavon, self.le_angulo_minimo_eslavon, self.le_pin_pasos_eslavon, self.le_pin_direccion_eslavon, self.le_pin_enable_eslavon]
         self.model = ModelCobot()
         self.config_iniciales()
         self.poblar_widgets("init")
@@ -104,16 +103,19 @@ class view(Ui_Dialog, QDialog):
         self.json_ultimo_cobot = self.model.json_ultimo_cobot  
         self.error_numerico_le = False
         self.pb_conectar_controlador.setStyleSheet("background-color: #99FF99;")
+        self.l_estado_de_conexion.setStyleSheet("color: #c0392b;")
         self.pb_setear_cobot.setEnabled(False)
         
     def estado_conexion(self, conectado):
         if conectado:
             self.l_estado_de_conexion.setText("Controlador conectado")
+            self.l_estado_de_conexion.setStyleSheet("color: #27ae60;")
             self.pb_conectar_controlador.setText("Desconectar")
             self.pb_conectar_controlador.setStyleSheet("background-color: #FF9999;")
             self.pb_setear_cobot.setEnabled(True)
         else:
             self.l_estado_de_conexion.setText("Desconectado")
+            self.l_estado_de_conexion.setStyleSheet("color: #c0392b;")
             self.pb_conectar_controlador.setText("Conectar")
             self.pb_conectar_controlador.setStyleSheet("background-color: #99FF99;")
             self.pb_setear_cobot.setEnabled(False)
@@ -236,7 +238,7 @@ class view(Ui_Dialog, QDialog):
                 "angulo_minimo": float(self.le_angulo_minimo_eslavon.text())
             }
         }
-        self.model.guardar_eslavon(str(self.hs_selector_DOF.value()), self.datos_eslavon)
+        self.model.guardar_eslavon(str(self.hs_numero_DOF.value()),str(self.hs_selector_DOF.value()), self.datos_eslavon)
 
     def funcionalidad_pb(self):
         self.pb_seleccion_motor.clicked.connect(self.actualizar_motor)
@@ -255,19 +257,31 @@ class view(Ui_Dialog, QDialog):
         
     def actualizar_widgets_seleccion_DOF(self, valor):
         try:
-            self.le_largo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("largo", 0)))
-            self.le_nombre_eslavon.setText(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("nombre", "Cintura"))
-            self.le_angulo_minimo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("motor",{}).get("angulo_minimo", 1.8)))
-            self.pb_seleccion_motor.setText(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("motor", {}).get("tipo", "Paso a paso"))
-            self.le_pin_pasos_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("motor", {}).get("pin", 0)))
-            if self.pb_seleccion_motor.text() == "Paso a paso":
-                self.le_pin_direccion_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("motor", {}).get("direccion", 0)))
-                self.le_pin_enable_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(str(valor)).get("motor", {}).get("enable", 0)))
+            if str(valor) in self.json_ultimo_cobot.get("DOF", {}):
+                eslavon = self.json_ultimo_cobot.get("DOF", {}).get(str(valor), {})
+                self.le_largo_eslavon.setText(str(eslavon.get("largo", 0)))
+                self.le_nombre_eslavon.setText(eslavon.get("nombre", "Cintura"))
+                self.le_angulo_minimo_eslavon.setText(str(eslavon.get("angulo_minimo", 1.8)))
+                self.pb_seleccion_motor.setText(eslavon.get("motor", {}).get("tipo", "Paso a paso"))
+                self.le_pin_pasos_eslavon.setText(str(eslavon.get("motor", {}).get("pin", 0)))
+                if self.pb_seleccion_motor.text() == "Paso a paso":
+                    self.le_pin_direccion_eslavon.setText(str(eslavon.get("motor", {}).get("direccion", 0)))
+                    self.le_pin_enable_eslavon.setText(str(eslavon.get("motor", {}).get("enable", 0)))
+                else:
+                    self.le_pin_direccion_eslavon.setText("N/A")
+                    self.le_pin_enable_eslavon.setText("N/A")
+                    self.le_pin_direccion_eslavon.setEnabled(False)
+                    self.le_pin_enable_eslavon.setEnabled(False)
             else:
-                self.le_pin_direccion_eslavon.setText("N/A")
-                self.le_pin_enable_eslavon.setText("N/A")
-                self.le_pin_direccion_eslavon.setEnabled(False)
-                self.le_pin_enable_eslavon.setEnabled(False)
+                self.le_largo_eslavon.setText("0")
+                self.le_nombre_eslavon.setText("setear!")
+                self.le_angulo_minimo_eslavon.setText("1.8")
+                self.pb_seleccion_motor.setText("Paso a paso")
+                self.le_pin_pasos_eslavon.setText("0")
+                self.le_pin_direccion_eslavon.setText("0")
+                self.le_pin_enable_eslavon.setText("0")
+                self.le_pin_direccion_eslavon.setEnabled(True)
+                self.le_pin_enable_eslavon.setEnabled(True)
 
         except Exception as e:
             print(f"Error al actualizar widgets de selección DOF: {e}")
@@ -294,9 +308,9 @@ class view(Ui_Dialog, QDialog):
                 self.hs_selector_DOF.setMinimum(1)
                 self.hs_selector_DOF.setValue(1)
                 self.l_valor_seleccion_DOF.setText("1")
-                #self.le_largo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get("largo", 0)))
+                self.le_largo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get("largo", 0)))
                 self.pb_seleccion_motor.setText(self.json_ultimo_cobot.get("DOF", {}).get("motor", {}).get("tipo", "Paso a paso"))
-                #self.le_angulo_minimo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get("motor", {}).get("angulo_minimo", 1)))
+                self.le_angulo_minimo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get("motor", {}).get("angulo_minimo", 1)))
                 self.le_nombre_eslavon.setText(self.json_ultimo_cobot.get("DOF", {}).get("nombre", "Cintura"))
                 if self.json_ultimo_cobot.get("movimientos", []) != []:
                     self.lw_lista_movimientos.clear()
