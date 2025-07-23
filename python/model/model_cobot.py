@@ -29,7 +29,8 @@ class ModelCobot(QObject):
     
     ## signals
     conexion_signal = pyqtSignal(bool)  
-    eslavon_guardado = pyqtSignal(bool)  
+    eslavon_guardado_signal = pyqtSignal(bool)  
+    actualizar_le_direccion_y_enable_signal = pyqtSignal(str, str)  # Emite los valores de direccion y enable del motor del eslavon
     
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -71,6 +72,7 @@ class ModelCobot(QObject):
                             respuesta = self.ser.readline().decode().strip()
                             print(f"Respuesta del Arduino: {respuesta}  <-----")
                             if respuesta == eslavon:
+                                print("")
                                 print(f"Arduino ha recibido correctamente: {eslavon}")
                                 self.ser.write(b"OK\n") 
                                 print("")
@@ -82,14 +84,18 @@ class ModelCobot(QObject):
                 print(f"El archivo {path_json} no existe.")
         except Exception as e:
             print(f"Error al enviar el JSON al Arduino: {e}")
-        
-        
-    def actualizar_datos_json(self, datos_json):
-        try:
-            self.datos = json.loads(datos_json)
-            self.datos_actualizados.emit(self.datos)
-        except json.JSONDecodeError as e:
-            print(f"Error al decodificar JSON: {e}")
+            
+    def actualizar_eslavon_cambio_motor(self, numero_de_eslavon):
+        print(f"Actualizando eslavón {numero_de_eslavon} para mostrar los pines de dirección y enable del motor.")
+        if numero_de_eslavon in self.json_ultimo_cobot.get("DOF", {}):
+            datos_eslavon = self.json_ultimo_cobot["DOF"][numero_de_eslavon].get("motor", {})
+            valor_pin_direccion = datos_eslavon.get("direccion", "N/A")
+            print(f"Valor de pin dirección: {valor_pin_direccion}")
+            valor_pin_enable = datos_eslavon.get("enable", "N/A")
+            print(f"Valor de pin enable: {valor_pin_enable}")
+            self.actualizar_le_direccion_y_enable_signal.emit(str(valor_pin_direccion), str(valor_pin_enable))
+        else:
+            print(f"El eslavón {numero_de_eslavon} no existe en el JSON.")
             
     def guardar_eslavon(self,numero_de_eslavon : str,datos_eslavon : dict):
         try:
@@ -102,11 +108,11 @@ class ModelCobot(QObject):
             with open("python/model/json/json_cobot.json", "w") as file:
                 json.dump(self.json_ultimo_cobot, file, indent=4)
                 
-            self.eslavon_guardado.emit(True)
+            self.eslavon_guardado_signal.emit(True)
         
         except:
             print("Error al obtener el valor del selector DOF.")
-            self.eslavon_guardado.emit(False)
+            self.eslavon_guardado_signal.emit(False)
 
         
     def iniciar_rutina(self, mensaje):
