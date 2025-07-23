@@ -1,0 +1,43 @@
+{
+    "tincho": {
+        "nombre": "tincho",
+        "descripcion": "prueba de cobot",
+        "DOF": {
+            "1": {
+                "nombre": "Cintura",
+                "largo": 0.0,
+                "rotacion": "z",
+                "motor": {
+                    "tipo": "Paso a paso",
+                    "pin": 3,
+                    "direccion": 4,
+                    "enable": 2,
+                    "angulo_minimo": 1.8
+                }
+            },
+            "2": {
+                "nombre": "codo",
+                "largo": 15.0,
+                "rotacion": "x",
+                "motor": {
+                    "tipo": "Paso a paso",
+                    "pin": 2,
+                    "direccion": 4,
+                    "enable": 3,
+                    "angulo_minimo": 1.8
+                }
+            },
+            "3": {
+                "nombre": "cabeza",
+                "largo": 11.0,
+                "motor": {
+                    "tipo": "Paso a paso",
+                    "pin": 6,
+                    "direccion": 5,
+                    "enable": 7,
+                    "angulo_minimo": 1.8
+                }
+            }
+        }
+    }
+}

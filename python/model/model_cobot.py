@@ -8,6 +8,7 @@ import time
 #importo 
 
 path_json = "python/model/json/json_cobot.json"
+path_cobots_guardados = "python/model/json/json_cobots_guardados.json"
 
 ultimo_cobot = {}
 
@@ -20,13 +21,26 @@ if os.path.exists(path_json):
             print(f"Error al decodificar JSON: {e}")
 else:
     print(f"El archivo {path_json} no existe.")
+    
+   
+if os.path.exists(path_cobots_guardados):
+    with open(path_cobots_guardados, "r") as file:
+        try:
+            cobots_guardados = json.load(file)  
+            print("Cobots guardados cargados:", cobots_guardados)
+        except json.JSONDecodeError as e:
+            print(f"Error al decodificar JSON: {e}")
+else:
+    print(f"El archivo {path_cobots_guardados} no existe.")
 
 class ModelCobot(QObject):
     '''
     Model de la GUI para mandar ordenes al cobot, y también recibir información del cobot.
     '''
     json_ultimo_cobot = ultimo_cobot # json del ultimo cobot importado en instancia de clase
-    
+    json_cobots_guardados = cobots_guardados # json de los cobots guardados, se carga al iniciar la clase
+    cobot_guardado_signal = pyqtSignal(bool)  # Emite True si se guardó el cobot correctamente, False si hubo un error al guardar.
+
     ## signals
     conexion_signal = pyqtSignal(bool)  
     eslavon_guardado_signal = pyqtSignal(bool)  
@@ -97,6 +111,33 @@ class ModelCobot(QObject):
             self.actualizar_le_direccion_y_enable_signal.emit(str(valor_pin_direccion), str(valor_pin_enable))
         else:
             print(f"El eslavón {numero_de_eslavon} no existe en el JSON.")
+    
+    def guardado_sin_nombre(self, nombre_cobot : str):
+        json_sin_nombre = self.json_ultimo_cobot.copy()  
+        json_sin_nombre.pop("nombre", None)  
+        self.json_cobots_guardados[nombre_cobot] = json_sin_nombre
+        print(json_sin_nombre)
+        print(f"guardando el cobot {nombre_cobot} en el json de_ cobots guardados")
+        
+        with open(path_cobots_guardados, "w") as file:
+            json.dump(self.json_cobots_guardados, file, indent=4)
+      
+    def guardar_cobot(self, nombre_cobot: str, forzar_guardado: bool, datos_cobot: dict):
+        try:
+            # 1. Guardar como "actual" (json_cobot.json)
+            with open(path_json, "w") as file:
+                json.dump(datos_cobot, file, indent=4)
+            self.json_ultimo_cobot = datos_cobot
+
+            # 2. Guardar en el registro de cobots guardados
+            self.json_cobots_guardados[nombre_cobot] = datos_cobot.copy()
+            with open(path_cobots_guardados, "w") as file:
+                json.dump(self.json_cobots_guardados, file, indent=4)
+
+            self.cobot_guardado_signal.emit(True)
+        except Exception as e:
+            print(f"Error al guardar el cobot {nombre_cobot}: {e}")
+            self.cobot_guardado_signal.emit(False)
             
     def guardar_eslavon(self,numero_de_DOF : str, numero_de_eslavon : str,datos_eslavon : dict):
         try:
