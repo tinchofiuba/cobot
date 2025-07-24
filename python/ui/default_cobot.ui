@@ -207,7 +207,7 @@
     <property name="title">
      <string>Configuraciones eslavones</string>
     </property>
-    <widget class="QWidget" name="">
+    <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>12</x>
@@ -849,9 +849,9 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pb_iniciar_rutina">
+        <widget class="QPushButton" name="pb_enviar_ordenes">
          <property name="text">
-          <string>Inciar rutina</string>
+          <string>Enviar ordenes</string>
          </property>
         </widget>
        </item>

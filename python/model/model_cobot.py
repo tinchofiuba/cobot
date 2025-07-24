@@ -234,8 +234,15 @@ class ModelCobot(QObject):
             print("Error al obtener el valor del selector DOF.")
             self.eslavon_guardado_signal.emit(False)
 
-    def iniciar_rutina(self, mensaje):
-        print("iniciando rutina")
+    def enviar_ordenes(self,mensaje: str):
+        try:
+            self.ser.write(("m_100\n").encode())
+            print("iniciando rutina")
+            time.sleep(0.5)
+
+        except serial.SerialException as e:
+            print(f"Error al enviar órdenes al Arduino: {e}")
+            return
         
     def iniciar_detener_conexion(self):
         if self.conectado == False:

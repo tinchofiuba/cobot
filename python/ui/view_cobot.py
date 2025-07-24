@@ -148,8 +148,12 @@ class view(Ui_Dialog, QDialog):
         self.poblar_widgets("init")
         self.funcionalidad_hs()
         self.funcionalidad_pb()
+        self.funcionalidad_lw()
         self.funcionalidad_le()
         self.funcionalidad_signals()
+
+    def funcionalidad_lw(self):
+        self.lw_lista_movimientos.currentItemChanged.connect(self.verificacion_cantidad_movimientos)
 
     def config_iniciales(self):
         self.error_numerico_le = False
@@ -253,12 +257,12 @@ class view(Ui_Dialog, QDialog):
         if self.lw_lista_movimientos.count() == 0:
             self.pb_remover_movimiento.setEnabled(False)
             self.pb_borrar_todo_movimiento.setEnabled(False)
-            self.pb_iniciar_rutina.setEnabled(False)
+            self.enviar_ordenes.setEnabled(False)
             self.lw_lista_movimientos.addItem("Sin movimientos asignados.")
         else:
             self.pb_remover_movimiento.setEnabled(True)
             self.pb_borrar_todo_movimiento.setEnabled(True)
-            self.pb_iniciar_rutina.setEnabled(True)
+            self.enviar_ordenes.setEnabled(True)
         
             
     def borrar_movimiento(self, cantidad):
@@ -286,10 +290,10 @@ class view(Ui_Dialog, QDialog):
         dialog.movimiento_nievo_signal.connect(self.agregar_movimiento_a_lista) 
         dialog.exec_()
             
-    def iniciar_rutina(self):
-        movimientos_enviados = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
-        if movimientos_enviados:
-            self.model.iniciar_rutina("iniciar")
+    def enviar_ordenes(self):
+        self.lista_movimientos = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
+        if self.lista_movimientos:
+            self.model.enviar_ordenes("iniciar")
         else:
             QMessageBox.warning(self, "Error", "No hay movimientos para iniciar la rutina.")
             
@@ -325,7 +329,6 @@ class view(Ui_Dialog, QDialog):
         }
 
     def guardar_cobot(self):
-        self.lista_movimientos = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
         datos_cobot = self.armar_diccionario_cobot_desde_gui_y_json()
         self.model.guardar_cobot(datos_cobot["nombre"], False, datos_cobot = datos_cobot)
 
@@ -346,7 +349,7 @@ class view(Ui_Dialog, QDialog):
         self.pb_borrar_todo_movimiento.clicked.connect(lambda : self.borrar_movimiento("todo"))
         self.pb_remover_movimiento.clicked.connect(lambda : self.borrar_movimiento("uno"))
         self.pb_agregar_movimiento.clicked.connect(self.abrir_dialogo_movimiento)
-        self.pb_iniciar_rutina.clicked.connect(self.iniciar_rutina)
+        self.pb_enviar_ordenes.clicked.connect(self.enviar_ordenes)
         self.pb_conectar_controlador.clicked.connect(self.model.iniciar_detener_conexion)
         self.pb_setear_cobot.clicked.connect(lambda : self.model.setear_cobot_en_arduino())
         self.pb_guardar_eslavon.clicked.connect(self.guardar_eslavon)
