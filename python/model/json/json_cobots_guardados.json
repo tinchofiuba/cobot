@@ -93,5 +93,26 @@
                 }
             }
         }
+    },
+    "rotamesa": {
+        "nombre": "rotamesa",
+        "descripcion": "prueba de rotames",
+        "DOF": {
+            "1": {
+                "nombre": "rotamesa",
+                "largo": 0.0,
+                "rotacion": "z",
+                "motor": {
+                    "tipo": "Paso a paso",
+                    "pin": 13,
+                    "direccion": 11,
+                    "enable": 12,
+                    "angulo_minimo": 1.8
+                }
+            }
+        },
+        "movimientos": [
+            "Girar base-(100,8000,1)-d2000"
+        ]
     }
 }

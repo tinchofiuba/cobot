@@ -41,8 +41,39 @@ bool configuracion_terminada = false;
 
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
-void mover_cobot(String ordenes){
-  digitalWrite(ledPin, HIGH);
+void mover_cobot(String mensaje){
+
+  byte index_pasos = mensaje.indexOf('_');
+  String mensaje_pasos = mensaje.substring(0, index_pasos);
+  int num_pasos = mensaje_pasos.toInt();
+  mensaje = mensaje.substring(index_pasos+1);
+
+  byte index_delay_bobina = mensaje.indexOf('_');
+  String mensaje_delay_bobina = mensaje.substring(0, index_delay_bobina);
+  int delay_bobina_rotamesa = mensaje_delay_bobina.toInt();
+  mensaje = mensaje.substring(index_delay_bobina+1);
+
+  byte index_direccion = mensaje.indexOf('_');
+  String mensaje_direccion = mensaje.substring(0, index_direccion);
+  int direccion_rotamesa = mensaje_direccion.toInt();
+  mensaje = mensaje.substring(index_direccion+1);
+
+  int delay_rotamesa = mensaje.toInt();
+
+  Serial.println(num_pasos);
+  Serial.println(delay_bobina_rotamesa);
+  Serial.println(direccion_rotamesa);
+  Serial.println(delay_rotamesa);
+
+  digitalWrite(11,direccion_rotamesa);
+  for (int i = 0; i < num_pasos ; i++){  
+
+    digitalWrite(13, HIGH);
+    delayMicroseconds(delay_bobina_rotamesa); 
+    digitalWrite(13, LOW); 
+    delayMicroseconds(delay_bobina_rotamesa); 
+    }
+
 }
 
 String decodificar_servo(String string_python){ //decodificación y reconstrucción del mensaje para setear un servo
@@ -254,9 +285,9 @@ void loop()
         esperando_seteo();
       }
     } 
-    
-    else if (mensaje.startsWith("m_")) {
-      mensaje = mensaje.substring(2); 
+
+    else if (mensaje.startsWith("gb_")){
+      mensaje = mensaje.substring(3);
       mover_cobot(mensaje);
       Serial.println("finalizado");
     }

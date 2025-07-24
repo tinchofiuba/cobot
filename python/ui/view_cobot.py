@@ -64,7 +64,7 @@ class DialogGestionarCobots(Ui_Dialog_GestionarCobots, QDialog):
 class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
     
     movimiento_nievo_signal = pyqtSignal(str)  
-    lista_movimientos_posibles = ["Mover a", "A origen", "Loop", "Endloop"]
+    lista_movimientos_posibles = ["Mover a", "A origen", "Begin loop", "End loop", "Girar base"]
     
     def __init__(self, parent=None):
         super(DialogMovimiento, self).__init__(parent)
@@ -80,14 +80,25 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
         
     def seleccionar_movimientos(self):
         if self.pb_seleccion_movimiento.text() in self.lista_movimientos_posibles:
-            self.funcionalidad_le("check")
+            
             index = self.lista_movimientos_posibles.index(self.pb_seleccion_movimiento.text())
             next_index = (index + 1) % len(self.lista_movimientos_posibles)
             self.pb_seleccion_movimiento.setText(self.lista_movimientos_posibles[next_index])
+            self.funcionalidad_le("check")
+            
+            if self.pb_seleccion_movimiento.text() == "Girar base":
+                self.l_x.setText("Pasos")  # Cambia el texto del label de manera dinámica
+                self.l_y.setText("d_useg")  # Cambia el texto del label de manera dinámica
+                self.l_z.setText("dir") # Cambia el texto del label de manera dinámica
+            else:
+                self.l_x.setText("X")
+                self.l_y.setText("Y")
+                self.l_z.setText("Z")
+
         else:
             self.pb_seleccion_movimiento.setText(self.lista_movimientos_posibles[0])
             
-        if self.pb_seleccion_movimiento.text() == "Loop" or self.pb_seleccion_movimiento.text() == "Endloop":
+        if self.pb_seleccion_movimiento.text() == "Begin loop" or self.pb_seleccion_movimiento.text() == "End loop":
             self.limpiar_y_deshabilitar_line_edits()
             self.pb_agregar_movimiento.setEnabled(True)
         else:
@@ -105,12 +116,17 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
         
     def agregar_movimiento(self):
         delay = ""
-        vector = f"({self.le_x.text()},{self.le_y.text()},{self.le_z.text()})"
+        if self.pb_seleccion_movimiento.text() == "Girar base":
+            vector = f"({self.le_x.text()},{self.le_y.text()},{self.le_z.text()})"
+        elif self.pb_seleccion_movimiento.text() == "Loop" or self.pb_seleccion_movimiento.text() == "Endloop":
+            vector = ""
+        else:
+            vector = f"({self.le_x.text()},{self.le_y.text()},{self.le_z.text()})"
         if self.le_delay.text() != "":
             delay = f"d{self.le_delay.text()}"
-            self.movimiento = f"{self.pb_seleccion_movimiento.text()} {vector} {delay}"
+            self.movimiento = f"{self.pb_seleccion_movimiento.text()}-{vector}-{delay}"
         else:
-            self.movimiento = f"{self.pb_seleccion_movimiento.text()} {vector}"
+            self.movimiento = f"{self.pb_seleccion_movimiento.text()}-{vector}-d0"
             
         self.movimiento_nievo_signal.emit(self.movimiento)
         
@@ -119,14 +135,23 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
         
     def funcionalidad_le(self,condicion: str):
         if condicion == "change":
-            for le in [self.le_x, self.le_y, self.le_z]:
-                le.textChanged.connect(lambda : self.validar_line_edits(le))
+            if self.pb_seleccion_movimiento.text() == "Girar base":
+                for le in [self.le_x, self.le_y]:
+                    le.textChanged.connect(lambda : self.validar_line_edits(le))
+            else:
+                for le in [self.le_x, self.le_y, self.le_z, self.le_delay]:
+                    le.textChanged.connect(lambda : self.validar_line_edits(le))
         elif condicion == "check":
             if all(le.text() for le in [self.le_x, self.le_y, self.le_z]):
-                print(all(le.text() for le in [self.le_x, self.le_y, self.le_z]))
                 self.pb_agregar_movimiento.setEnabled(True)
             else:
                 self.pb_agregar_movimiento.setEnabled(False)
+        elif condicion == "check girar base":
+            if all(le.text() for le in [self.le_x, self.le_y]):
+                self.pb_agregar_movimiento.setEnabled(True)
+            else:
+                self.pb_agregar_movimiento.setEnabled(False)
+            
                 
         
     def validar_line_edits(self, le):
@@ -257,12 +282,12 @@ class view(Ui_Dialog, QDialog):
         if self.lw_lista_movimientos.count() == 0:
             self.pb_remover_movimiento.setEnabled(False)
             self.pb_borrar_todo_movimiento.setEnabled(False)
-            self.enviar_ordenes.setEnabled(False)
+            self.pb_enviar_ordenes.setEnabled(False)
             self.lw_lista_movimientos.addItem("Sin movimientos asignados.")
         else:
             self.pb_remover_movimiento.setEnabled(True)
             self.pb_borrar_todo_movimiento.setEnabled(True)
-            self.enviar_ordenes.setEnabled(True)
+            self.pb_enviar_ordenes.setEnabled(True)
         
             
     def borrar_movimiento(self, cantidad):
@@ -275,12 +300,13 @@ class view(Ui_Dialog, QDialog):
                 print(f"Error al borrar movimiento: {e}")
         elif cantidad == "todo":
             self.lw_lista_movimientos.clear()
-                
+        self.lista_movimientos = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
         self.verificacion_cantidad_movimientos() 
 
     def agregar_movimiento_a_lista(self, movimiento):
         if movimiento:
             self.lw_lista_movimientos.addItem(movimiento)
+            self.lista_movimientos = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
             self.verificacion_cantidad_movimientos()
         else:
             QMessageBox.warning(self, "Error", "No se pudo agregar el movimiento. Verifique los datos ingresados.")
@@ -291,9 +317,8 @@ class view(Ui_Dialog, QDialog):
         dialog.exec_()
             
     def enviar_ordenes(self):
-        self.lista_movimientos = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
         if self.lista_movimientos:
-            self.model.enviar_ordenes("iniciar")
+            self.model.enviar_ordenes(self.lista_movimientos)
         else:
             QMessageBox.warning(self, "Error", "No hay movimientos para iniciar la rutina.")
             
@@ -434,6 +459,7 @@ class view(Ui_Dialog, QDialog):
                     self.le_pin_enable_eslavon.setText("N/A")
                 self.le_pin_pasos_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(self.valor_selector_DOF, {}).get("motor", {}).get("pin", 0)))
                 if self.json_ultimo_cobot.get("movimientos", []) != []:
+                    self.lista_movimientos = [movimiento for movimiento in self.json_ultimo_cobot.get("movimientos")]
                     self.lw_lista_movimientos.clear()
                     for movimiento in self.json_ultimo_cobot.get("movimientos"):
                         self.lw_lista_movimientos.addItem(movimiento)

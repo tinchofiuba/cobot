@@ -233,11 +233,24 @@ class ModelCobot(QObject):
         except:
             print("Error al obtener el valor del selector DOF.")
             self.eslavon_guardado_signal.emit(False)
+            
+    def codificar_orden_de_movimiento(self, lista_mov: list):
+        
+        for movimiento in lista_mov:
+            movimiento_parseado = movimiento.split("-")
+            print(f"movimiento_parseado: {movimiento_parseado}")
+            if movimiento_parseado[0] == "Girar base":
+                orden = "gb"
+            vector_parseado = movimiento_parseado[1].replace("(", "").replace(")", "").split(",")
+            delay = movimiento_parseado[2].replace("d", "")
+            vector_codificado = f"({orden}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay})"
+            return vector_codificado
 
-    def enviar_ordenes(self,mensaje: str):
+    def enviar_ordenes(self,mensaje: list):
         try:
-            self.ser.write(("m_100\n").encode())
-            print("iniciando rutina")
+            mensaje = self.codificar_orden_de_movimiento(mensaje)
+            print(f"Enviando mensaje al Arduino: {mensaje}")
+            self.ser.write((f"{mensaje}\n").encode())
             time.sleep(0.5)
 
         except serial.SerialException as e:
