@@ -1,6 +1,6 @@
 {
-    "nombre": "carlita",
-    "descripcion": "es una segunda prueba para ver si funcona",
+    "nombre": "tincho2",
+    "descripcion": "prueba de cobot",
     "DOF": {
         "1": {
             "nombre": "Cintura",
@@ -34,17 +34,10 @@
                 "enable": 7,
                 "angulo_minimo": 1.8
             }
-        },
-        "4": {
-            "nombre": "saas",
-            "largo": 1.0,
-            "motor": {
-                "tipo": "Paso a paso",
-                "pin": 1,
-                "direccion": 1,
-                "enable": 1,
-                "angulo_minimo": 1.8
-            }
         }
-    }
+    },
+    "movimientos": [
+        "Mover a (10,10,10) d1000",
+        "Mover a (15,15,10) d2000"
+    ]
 }

@@ -1,11 +1,12 @@
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
+from python.model.cinematica_inversa import CinematicaInversa  
+
 import json
 import os
 import serial
 import time
-#importo 
 
 path_json = "python/model/json/json_cobot.json"
 path_cobots_guardados = "python/model/json/json_cobots_guardados.json"
@@ -34,19 +35,16 @@ else:
     print(f"El archivo {path_cobots_guardados} no existe.")
 
 class ModelCobot(QObject):
-    '''
-    Model de la GUI para mandar ordenes al cobot, y también recibir información del cobot.
-    '''
-    json_ultimo_cobot = ultimo_cobot # json del ultimo cobot importado en instancia de clase
-    json_cobots_guardados = cobots_guardados # json de los cobots guardados, se carga al iniciar la clase
-    cobot_guardado_signal = pyqtSignal(bool)  # Emite True si se guardó el cobot correctamente, False si hubo un error al guardar.
-    poblar_lw_cobots_signal = pyqtSignal(list, list)
-    cobot_borrado_signal = pyqtSignal(bool)  # Emite True si se borró el cobot correctamente, False si hubo un error al borrar.
 
-    ## signals
+    json_ultimo_cobot = ultimo_cobot 
+    json_cobots_guardados = cobots_guardados
+    cobot_guardado_signal = pyqtSignal(bool)  
+    poblar_lw_cobots_signal = pyqtSignal(list, list)
+    cobot_borrado_signal = pyqtSignal(bool)  
+    cobot_cargado_signal = pyqtSignal(bool)
     conexion_signal = pyqtSignal(bool)  
     eslavon_guardado_signal = pyqtSignal(bool)  
-    actualizar_le_direccion_y_enable_signal = pyqtSignal(str, str)  # Emite los valores de direccion y enable del motor del eslavon
+    actualizar_le_direccion_y_enable_signal = pyqtSignal(str, str)  
     
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -64,7 +62,6 @@ class ModelCobot(QObject):
         print(f"json_plano: {json_plano}")
         print("")
         return json_plano
-        
            
     def setear_cobot_en_arduino(self):
         
@@ -112,6 +109,17 @@ class ModelCobot(QObject):
             self.actualizar_le_direccion_y_enable_signal.emit(str(valor_pin_direccion), str(valor_pin_enable))
         else:
             print(f"El eslavón {numero_de_eslavon} no existe en el JSON.")
+    
+    def cargar_cobot(self, nombre_cobot: str):
+        if nombre_cobot in self.json_cobots_guardados:
+            self.json_ultimo_cobot = self.json_cobots_guardados[nombre_cobot]
+            with open(path_json, "w") as file:
+                json.dump(self.json_ultimo_cobot, file, indent=4)
+            print(f"Cargado el cobot {nombre_cobot} desde los cobots guardados.")
+            self.cobot_cargado_signal.emit(True)
+        else:
+            print(f"El cobot {nombre_cobot} no existe en los cobots guardados.")
+            self.cobot_cargado_signal.emit(False)
     
     def guardado_sin_nombre(self, nombre_cobot : str):
         json_sin_nombre = self.json_ultimo_cobot.copy()  
@@ -173,27 +181,37 @@ class ModelCobot(QObject):
         except FileNotFoundError:
             print(f"El archivo {path_cobots_guardados} no existe. No se pueden cargar los cobots guardados.")
       
-    def guardar_cobot(self, nombre_cobot: str, forzar_guardado: bool, datos_cobot: dict):
+    def guardar_cobot_a_json(self):
+        self.json_cobots_guardados[self.nombre_cobot] = self.datos_cobot.copy()
+        with open(path_cobots_guardados, "w") as file:
+            json.dump(self.json_cobots_guardados, file, indent=4)
+        self.cobot_guardado_signal.emit(True)
+      
+    def guardar_cobot(self, nombre_cobot: str, forzar_guardado: bool, **kwargs):
+        
+        self.nombre_cobot = nombre_cobot
+        
+        if "datos_cobot" in kwargs:
+            self.datos_cobot = kwargs["datos_cobot"]
+            
         try:
-            # 1. Guardar como "actual" (json_cobot.json)
             with open(path_json, "w") as file:
-                json.dump(datos_cobot, file, indent=4)
-            self.json_ultimo_cobot = datos_cobot
+                json.dump(self.datos_cobot, file, indent=4)
+            self.json_ultimo_cobot = self.datos_cobot
 
-            # 2. Guardar en el registro de cobots guardados
-            self.json_cobots_guardados[nombre_cobot] = datos_cobot.copy()
-            with open(path_cobots_guardados, "w") as file:
-                json.dump(self.json_cobots_guardados, file, indent=4)
-
-            self.cobot_guardado_signal.emit(True)
+            if self.nombre_cobot not in self.json_cobots_guardados:
+                self.guardar_cobot_a_json()
+            elif forzar_guardado:
+                self.guardar_cobot_a_json()
+            else:
+                self.cobot_guardado_signal.emit(False)
+            
         except Exception as e:
-            print(f"Error al guardar el cobot {nombre_cobot}: {e}")
+            print(f"Error al guardar el cobot {self.nombre_cobot}: {e}")
             self.cobot_guardado_signal.emit(False)
             
     def guardar_eslavon(self,numero_de_DOF : str, numero_de_eslavon : str,datos_eslavon : dict):
         try:
-            
-            # si cambio el numero de DOF borro del dict los valores mayores al numero de DOF
             
             if len(self.json_ultimo_cobot["DOF"]) > int(numero_de_DOF):
                 #borro cualquier DOF mayor al numero_de_DOF
@@ -216,7 +234,6 @@ class ModelCobot(QObject):
             print("Error al obtener el valor del selector DOF.")
             self.eslavon_guardado_signal.emit(False)
 
-        
     def iniciar_rutina(self, mensaje):
         print("iniciando rutina")
         
@@ -260,8 +277,5 @@ class ModelCobot(QObject):
                     print(f"Respuesta del Arduino: {respuesta}, no es la esperada ...")
             else:
                 print("No hay respuesta del Arduino.")
-            
-            #self.ser.close()
-        
         
         

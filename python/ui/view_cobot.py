@@ -16,11 +16,12 @@ class DialogGestionarCobots(Ui_Dialog_GestionarCobots, QDialog):
         self.model = model
         self.funcionalidad_signals()
         self.config_iniciales()
-        self.funcionalidad_pb()
-        self.funcionalidad_lw()
-        
-    def funcionalidad_pb(self):
-        self.pb_borrar_cobot.clicked.connect(lambda: self.model.borrar_cobot(self.lw_cobots_guardados.currentItem().text()))
+        self.funcionalidad_pb_gestionar_cobot()
+        self.funcionalidad_lw() 
+
+    def funcionalidad_pb_gestionar_cobot(self):
+        self.pb_borrar_cobot.clicked.connect(lambda : self.model.borrar_cobot(self.lw_cobots_guardados.currentItem().text()))
+        self.pb_cargar_cobot.clicked.connect(lambda : self.model.cargar_cobot(self.lw_cobots_guardados.currentItem().text()))
 
     def mostrar_descripcion_cobot(self, row):
         if 0 <= row < len(self.lista_descripciones):
@@ -33,7 +34,6 @@ class DialogGestionarCobots(Ui_Dialog_GestionarCobots, QDialog):
         
     def config_iniciales(self):
         self.model.cargar_datos_cobots()
-        #le cambio el tamaño al textedit
         self.te_descripcion_cobot.setStyleSheet("font-size: 12px;")
         
     def cobot_borrado(self, condicion : bool):
@@ -94,8 +94,7 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
             self.le_x.setEnabled(True)
             self.le_y.setEnabled(True)
             self.le_z.setEnabled(True)
-            self.le_delay.setEnabled(True)
-            #self.pb_agregar_movimiento.setEnabled(False)            
+            self.le_delay.setEnabled(True) 
         
     def funcionalidad_pb_movimientos(self):
         self.pb_seleccion_movimiento.clicked.connect(self.seleccionar_movimientos)
@@ -121,9 +120,8 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
     def funcionalidad_le(self,condicion: str):
         if condicion == "change":
             for le in [self.le_x, self.le_y, self.le_z]:
-                le.textChanged.connect(lambda: self.validar_line_edits())
+                le.textChanged.connect(lambda : self.validar_line_edits(le))
         elif condicion == "check":
-            #me fijo si todos los los le que estan en la lista estan llenos, si es así habilito el pb_agregar_movimiento con la función all()
             if all(le.text() for le in [self.le_x, self.le_y, self.le_z]):
                 print(all(le.text() for le in [self.le_x, self.le_y, self.le_z]))
                 self.pb_agregar_movimiento.setEnabled(True)
@@ -154,7 +152,6 @@ class view(Ui_Dialog, QDialog):
         self.funcionalidad_signals()
 
     def config_iniciales(self):
-        self.json_ultimo_cobot = self.model.json_ultimo_cobot  
         self.error_numerico_le = False
         self.pb_conectar_controlador.setStyleSheet("background-color: #99FF99;")
         self.l_estado_de_conexion.setStyleSheet("color: #c0392b;")
@@ -206,6 +203,15 @@ class view(Ui_Dialog, QDialog):
         self.model.eslavon_guardado_signal.connect(self.mostrar_actualizacion_eslavon)
         self.model.actualizar_le_direccion_y_enable_signal.connect(self.actualizar_pin_enable_y_direccion)
         self.model.cobot_guardado_signal.connect(self.mostrar_confirmacion_guardado_cobot)
+        self.model.cobot_cargado_signal.connect(self.confirmacion_cargado_cobot)
+        
+    def confirmacion_cargado_cobot(self, exito : bool):
+        if exito:
+            self.poblar_widgets("init")
+            QMessageBox.information(self, "Éxito", "Cobot cargado correctamente.")
+            
+        else:
+            QMessageBox.warning(self, "Error", "No se pudo cargar el Cobot. Verifique que el archivo exista y sea válido.")
         
     def validar_line_edits(self):
         todos_llenos = all(le.text().strip() != "" for le in self.lista_line_edits)
@@ -241,7 +247,7 @@ class view(Ui_Dialog, QDialog):
             self.pb_seleccion_motor.setText("Paso a paso")
             self.le_pin_direccion_eslavon.setEnabled(True)
             self.le_pin_enable_eslavon.setEnabled(True)
-            self.model.actualizar_eslavon_cambio_motor(str(self.hs_selector_DOF.value())) # solo cuando se cambia a Paso a paso se vuelve a cargar los datos de pin enable y pin direccion
+            self.model.actualizar_eslavon_cambio_motor(str(self.hs_selector_DOF.value())) 
             
     def verificacion_cantidad_movimientos(self):
         if self.lw_lista_movimientos.count() == 0:
@@ -270,7 +276,6 @@ class view(Ui_Dialog, QDialog):
 
     def agregar_movimiento_a_lista(self, movimiento):
         if movimiento:
-            #me fijo 
             self.lw_lista_movimientos.addItem(movimiento)
             self.verificacion_cantidad_movimientos()
         else:
@@ -284,7 +289,6 @@ class view(Ui_Dialog, QDialog):
     def iniciar_rutina(self):
         movimientos_enviados = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
         if movimientos_enviados:
-            #self.model.inicar_rutina(movimientos_enviados)
             self.model.iniciar_rutina("iniciar")
         else:
             QMessageBox.warning(self, "Error", "No hay movimientos para iniciar la rutina.")
@@ -316,32 +320,43 @@ class view(Ui_Dialog, QDialog):
         return {
             "nombre": self.le_nombre_cobot.text(),
             "descripcion": self.te_descripcion_cobot.toPlainText(),
-            "DOF": self.json_ultimo_cobot.get("DOF", {})
+            "DOF": self.json_ultimo_cobot.get("DOF", {}),
+            "movimientos" : self.lista_movimientos
         }
 
     def guardar_cobot(self):
+        self.lista_movimientos = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
         datos_cobot = self.armar_diccionario_cobot_desde_gui_y_json()
-        self.model.guardar_cobot(datos_cobot["nombre"], False, datos_cobot)
+        self.model.guardar_cobot(datos_cobot["nombre"], False, datos_cobot = datos_cobot)
 
-    def cargar_cobot(self):
+    def gestionar_cobot(self):
         dialog = DialogGestionarCobots(self.model, self)
         dialog.exec_()
+        
+    def actualizar_valor_eje(self):
+        if self.pb_seleccion_eje.text() == "Eje X":
+            self.pb_seleccion_eje.setText("Eje Y")
+        elif self.pb_seleccion_eje.text() == "Eje Y":
+            self.pb_seleccion_eje.setText("Eje Z")
+        else:
+            self.pb_seleccion_eje.setText("Eje X")
 
     def funcionalidad_pb(self):
         self.pb_seleccion_motor.clicked.connect(self.actualizar_motor)
-        self.pb_borrar_todo_movimiento.clicked.connect(lambda: self.borrar_movimiento("todo"))
-        self.pb_remover_movimiento.clicked.connect(lambda: self.borrar_movimiento("uno"))
+        self.pb_borrar_todo_movimiento.clicked.connect(lambda : self.borrar_movimiento("todo"))
+        self.pb_remover_movimiento.clicked.connect(lambda : self.borrar_movimiento("uno"))
         self.pb_agregar_movimiento.clicked.connect(self.abrir_dialogo_movimiento)
         self.pb_iniciar_rutina.clicked.connect(self.iniciar_rutina)
         self.pb_conectar_controlador.clicked.connect(self.model.iniciar_detener_conexion)
-        self.pb_setear_cobot.clicked.connect(lambda: self.model.setear_cobot_en_arduino())
+        self.pb_setear_cobot.clicked.connect(lambda : self.model.setear_cobot_en_arduino())
         self.pb_guardar_eslavon.clicked.connect(self.guardar_eslavon)
         self.pb_guardar_cobot.clicked.connect(self.guardar_cobot)
-        self.pb_cargar_cobot.clicked.connect(self.cargar_cobot)
+        self.pb_gestionar_cobot.clicked.connect(self.gestionar_cobot)
+        self.pb_seleccion_eje.clicked.connect(self.actualizar_valor_eje)
         
     def funcionalidad_hs(self):
-        self.hs_numero_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))
-        self.hs_selector_DOF.valueChanged.connect(lambda: self.actualizar_hs(self.hs_selector_DOF, self.l_valor_seleccion_DOF))
+        self.hs_numero_DOF.valueChanged.connect(lambda : self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))
+        self.hs_selector_DOF.valueChanged.connect(lambda : self.actualizar_hs(self.hs_selector_DOF, self.l_valor_seleccion_DOF))
         self.habilitar_deshabilitar_guardado()
         
     def actualizar_widgets_seleccion_DOF(self, valor):
@@ -387,9 +402,9 @@ class view(Ui_Dialog, QDialog):
         l_valor_hs.setText(str(hs.value()))
     
     def poblar_widgets(self,condicion: str):
+        self.json_ultimo_cobot = self.model.json_ultimo_cobot  
         if self.json_ultimo_cobot:
             if condicion == "init":
-                
                 self.le_nombre_cobot.setText(self.json_ultimo_cobot.get("nombre", ""))
                 self.te_descripcion_cobot.setText(self.json_ultimo_cobot.get("descripcion", ""))
                 self.hs_numero_DOF.setValue(len(self.json_ultimo_cobot.get("DOF", [])))
