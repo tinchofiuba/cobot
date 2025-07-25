@@ -60,20 +60,15 @@ void mover_cobot(String mensaje){
 
   int delay_rotamesa = mensaje.toInt();
 
-  Serial.println(num_pasos);
-  Serial.println(delay_bobina_rotamesa);
-  Serial.println(direccion_rotamesa);
-  Serial.println(delay_rotamesa);
-
   digitalWrite(11,direccion_rotamesa);
+
   for (int i = 0; i < num_pasos ; i++){  
 
     digitalWrite(13, HIGH);
-    delayMicroseconds(delay_bobina_rotamesa); 
+    delayMicroseconds(15000); 
     digitalWrite(13, LOW); 
-    delayMicroseconds(delay_bobina_rotamesa); 
+    delayMicroseconds(15000); 
     }
-
 }
 
 String decodificar_servo(String string_python){ //decodificación y reconstrucción del mensaje para setear un servo
@@ -113,6 +108,7 @@ String decodificar_servo(String string_python){ //decodificación y reconstrucci
         break;
       case 1:
         servos[p].pin = campos[i].toInt();
+        pinMode(servos[p].pin, OUTPUT);
         servos[p].objeto.attach(servos[p].pin);
         break;
       case 2:
@@ -165,12 +161,17 @@ String decodificar_pap(String string_python){ //decodificación y reconstrucció
         break;
       case 1:
         motores[p].enable = campos[i].toInt();
+        pinMode(motores[p].enable, OUTPUT);
+        digitalWrite(motores[p].enable, LOW);
         break;
       case 2:
         motores[p].pasos = campos[i].toInt(); 
+        pinMode(motores[p].pasos, OUTPUT);
         break;
       case 3:
-        motores[p].direccion = campos[i].toInt(); 
+        motores[p].direccion = campos[i].toInt();
+        pinMode(motores[p].direccion, OUTPUT); 
+        digitalWrite(motores[p].direccion, LOW);
         break;
       case 4:
         motores[p].largo = campos[i].toInt(); 

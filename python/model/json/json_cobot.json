@@ -16,6 +16,7 @@
         }
     },
     "movimientos": [
-        "Girar base-(100,8000,1)-d2000"
+        "Sin movimientos asignados.",
+        "Girar base-(50,20000,0)-d0"
     ]
 }

@@ -91,8 +91,9 @@ class ModelCobot(QObject):
                                 break
                             else:
                                 print("Esperando confirmación correcta del Arduino...")
+                    print("Enviando el mensaje de finalización de seteo al Arduino ")
                     self.ser.write(b"fin_seteo\n")
-
+                    print("listo, ya debería estar seteado")
             else:
                 print(f"El archivo {path_json} no existe.")
         except Exception as e:
@@ -243,7 +244,7 @@ class ModelCobot(QObject):
                 orden = "gb"
             vector_parseado = movimiento_parseado[1].replace("(", "").replace(")", "").split(",")
             delay = movimiento_parseado[2].replace("d", "")
-            vector_codificado = f"({orden}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay})"
+            vector_codificado = f"{orden}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}"
             return vector_codificado
 
     def enviar_ordenes(self,mensaje: list):
@@ -252,7 +253,11 @@ class ModelCobot(QObject):
             print(f"Enviando mensaje al Arduino: {mensaje}")
             self.ser.write((f"{mensaje}\n").encode())
             time.sleep(0.5)
-
+            #leo el mensaje serial
+            if self.ser.in_waiting > 0:
+                respuesta = self.ser.readline().decode().strip()
+                print(f"Respuesta del Arduino: {respuesta}")
+                
         except serial.SerialException as e:
             print(f"Error al enviar órdenes al Arduino: {e}")
             return
