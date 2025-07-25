@@ -12,6 +12,16 @@ byte p = 0, s = 0;
 #define MAX_SERVOS 6
 #define MAX_PAP 6
 
+struct Movimiento {
+  String tipo; 
+  int pasos;
+  int delay_bobina;
+  int direccion;
+  int delay_total;
+};
+
+byte cantidad_movimientos = 0;
+
 struct servoConfig {
   String nombre;
   byte pin;
@@ -41,71 +51,73 @@ bool configuracion_terminada = false;
 
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
-void parsear_girar_base(String mensaje){
 
-  byte index_pasos = mensaje.indexOf('_');
-  String mensaje_pasos = mensaje.substring(0, index_pasos);
-  int num_pasos = mensaje_pasos.toInt();
-  mensaje = mensaje.substring(index_pasos+1);
+void asignar_movimiento(String mensaje, byte m) {
 
-  byte index_delay_bobina = mensaje.indexOf('_');
-  String mensaje_delay_bobina = mensaje.substring(0, index_delay_bobina);
-  int delay_bobina = mensaje_delay_bobina.toInt();
-  mensaje = mensaje.substring(index_delay_bobina+1);
+    byte index_motor = mensaje.indexOf('_');
+    String motor = mensaje.substring(0, index_motor);
+    int index_struct_motor = motor.toInt();
+    mensaje = mensaje.substring(index_motor+1);
 
-  byte index_direccion = mensaje.indexOf('_');
-  String mensaje_direccion = mensaje.substring(0, index_direccion);
-  int direccion = mensaje_direccion.toInt();
-  mensaje = mensaje.substring(index_direccion+1);
+    byte index_pasos = mensaje.indexOf('_');
+    String mensaje_pasos = mensaje.substring(0, index_pasos);
+    int num_pasos = mensaje_pasos.toInt();
+    mensaje = mensaje.substring(index_pasos+1);
 
-  int delay_entre_rutinas = mensaje.toInt();
+    byte index_delay_bobina = mensaje.indexOf('_');
+    String mensaje_delay_bobina = mensaje.substring(0, index_delay_bobina);
+    int delay_bobina = mensaje_delay_bobina.toInt();
+    mensaje = mensaje.substring(index_delay_bobina+1);
 
-  digitalWrite(11,direccion);
+    byte index_direccion = mensaje.indexOf('_');
+    String mensaje_direccion = mensaje.substring(0, index_direccion);
+    int direccion = mensaje_direccion.toInt();
+    mensaje = mensaje.substring(index_direccion+1);
+
+    int delay_entre_rutinas = mensaje.toInt();
+  
+  movimientos[m].tipo = tipo;
+  movimientos[m].pasos = pasos.toInt();
+  movimientos[m].delay_bobina = delay_bobina.toInt();
+  movimientos[m].direccion = direccion.toInt();
+  movimientos[m].delay_total = delay_total.toInt();
+
+}
+
+void mover_cobot(String mensaje, bool condicion_loop){ 
+
+  // si quiero mover un motor una determinada cantidad de pasos
+  if (mensaje.startsWith("G")){
+
+    mensaje = mensaje.substring(1);
+
+  }
+
+  for (byte m = 0; m < cantidad_movimientos; m++){
+
+    asignar_movimiento(mensaje.substring(0, index_movimiento), m);
+    mensaje = mensaje.substring(index_movimiento+1);
+
+  }
+
+
+
+  digitalWrite(pin_dir, direccion);
+  digitalWrite(pin_enable, LOW);
 
   for (int i = 0; i < num_pasos ; i++){  
 
-    digitalWrite(13, HIGH);
+    digitalWrite(pin_pasos, HIGH);
     delayMicroseconds(delay_bobina); 
-    digitalWrite(13, LOW); 
+    digitalWrite(pin_pasos, LOW); 
     delayMicroseconds(delay_bobina); 
+
     }
 
   if (delay_entre_rutinas != 0)
+
   {
     delay(delay_entre_rutinas);
-  }
-
-
-  
-}
-
-void parsear_movimientos(String mensaje){
-  if (mensaje.startswith("gb_"){
-    mensaje = mensaje.substring(3);
-
-  }
-
-}
-
-
-void mover_cobot(String mensaje, bool loop){
-
-  if (loop){ 
-
-    mensaje = mensaje.substring(3) //borro 'bl_'
-
-    while (Serial.available() == 0){
-      
-      parsear_movimientos(mensaje);
-      
-      if (Serial.available() > 0){
-        if (Serial.readStringUntil('\n') == "break_loop"){
-          break;
-
-        }
-      }     
-    } 
-
   }
 
 }
@@ -201,7 +213,7 @@ String decodificar_pap(String string_python){ //decodificación y reconstrucció
       case 1:
         motores[p].enable = campos[i].toInt();
         pinMode(motores[p].enable, OUTPUT);
-        digitalWrite(motores[p].enable, LOW);
+        digitalWrite(motores[p].enable, HIGH);
         break;
       case 2:
         motores[p].pasos = campos[i].toInt(); 
@@ -326,14 +338,32 @@ void loop()
       }
     } 
 
-    else if (mensaje.startsWith("gb_")){
-      mensaje = mensaje.substring(3);
-      mover_cobot(mensaje);
-      Serial.println("finalizado");
+    else if (mensaje.startsWith("Mover_")){
+
+      mensaje = mensaje.substring(6); //empiezo luego de "Mover_"
+
+      // busco el 1ero _ así separo Nm del número de movimientos y de _ de NMx_ 
+      byte index_numero_movimientos = mensaje.indexOf('_');
+      cantidad_movimientos = (byte)mensaje.substring(2, index_numero_movimientos).toInt();
+
+      Movimiento movimientos[cantidad_movimientos]; 
+
+      if (mensaje.startsWith("bl_")){
+        mensaje = mensaje.substring(3);
+        mover_cobot(mensaje, true);
+      }
+
+      else{
+        mover_cobot(mensaje, false);
+      }
+
+      Serial.println("movimiento/s finalizado/s");
     }
     
     else if (mensaje == "finalizar") {
+
       Serial.println("finalizado");
+
     }
   }
 

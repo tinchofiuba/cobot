@@ -16,6 +16,7 @@
         }
     },
     "movimientos": [
-        "Girar base-(200,15000,1)-d0"
+        "Girar rotamesa-(50,5000,1)-d0",
+        "Girar rotamesa-(50,18000,0)-d0"
     ]
 }

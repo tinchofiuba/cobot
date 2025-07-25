@@ -45,6 +45,7 @@ class ModelCobot(QObject):
     conexion_signal = pyqtSignal(bool)  
     eslavon_guardado_signal = pyqtSignal(bool)  
     actualizar_le_direccion_y_enable_signal = pyqtSignal(str, str)  
+    nombres_motores = [eslavon.get("nombre", f"Eslavon {num}") for num, eslavon in json_ultimo_cobot.get("DOF", {}).items()]
     
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -113,6 +114,8 @@ class ModelCobot(QObject):
     
     def cargar_cobot(self, nombre_cobot: str):
         if nombre_cobot in self.json_cobots_guardados:
+            self.nombre_cobot = nombre_cobot
+            self.nombres_motores = [eslavon.get("nombre", f"Eslavon {num}") for num, eslavon in self.json_ultimo_cobot.get("DOF", {}).items()]
             self.json_ultimo_cobot = self.json_cobots_guardados[nombre_cobot]
             with open(path_json, "w") as file:
                 json.dump(self.json_ultimo_cobot, file, indent=4)
@@ -225,6 +228,8 @@ class ModelCobot(QObject):
 
             else:
                 self.json_ultimo_cobot["DOF"][numero_de_eslavon].update(datos_eslavon)
+                
+            self.nombres_motores = [eslavon.get("nombre", f"Eslavon {num}") for num, eslavon in self.json_ultimo_cobot.get("DOF", {}).items()]
 
             with open("python/model/json/json_cobot.json", "w") as file:
                 json.dump(self.json_ultimo_cobot, file, indent=4)
@@ -237,26 +242,43 @@ class ModelCobot(QObject):
             
     def codificar_orden_de_movimiento(self, lista_mov: list):
         
+        movimiento_codificado = []
+        
+        # armo un dict que relaciona los nobmres con los numeros de los eslavones
+        indice_eslavon = {eslavon.get("nombre", ""): idx for idx, eslavon in self.json_ultimo_cobot.get("DOF", {}).items()}
+        
         for movimiento in lista_mov:
-            movimiento_parseado = movimiento.split("-")
-            print(f"movimiento_parseado: {movimiento_parseado}")
-            if movimiento_parseado[0] == "Girar base":
-                orden = "gb"
-            vector_parseado = movimiento_parseado[1].replace("(", "").replace(")", "").split(",")
-            delay = movimiento_parseado[2].replace("d", "")
-            vector_codificado = f"{orden}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}"
-            return vector_codificado
+            
+            movimiento_spliteado = movimiento.split("-")
+            tipo_movimiento = movimiento_spliteado[0].split(" ")[0]  # Girar
+            codificacion_movimiento = tipo_movimiento[0]
+            
+            eslavon = movimiento_spliteado[0].split(" ")[1]  # base
+            index_eslavon = indice_eslavon.get(eslavon, None)
+            
+            codificacion_movimiento += index_eslavon #genero G1 G2 .. Gn
+            vector_parseado = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",") # queda del tipo ["n_pasos","d_bobina","1/0"]
+            delay = movimiento_spliteado[2].replace("d", "")
+            
+            movimiento_codificado.append(f"{codificacion_movimiento}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}")
+        
+        return ";".join(movimiento_codificado) + ";"
 
-    def enviar_ordenes(self,mensaje: list):
+    def enviar_ordenes(self,mensaje: list, condicion_loop: bool):
+
         try:
-            mensaje = self.codificar_orden_de_movimiento(mensaje)
+            if condicion_loop == False:
+                mensaje = f"Mover_Nm{len(mensaje)}_" + self.codificar_orden_de_movimiento(mensaje)
+            else:
+                mensaje =  f"Mover_Nm{len(mensaje)-2}_bl_"+ self.codificar_orden_de_movimiento(mensaje) + "_el"
+                
             print(f"Enviando mensaje al Arduino: {mensaje}")
-            self.ser.write((f"{mensaje}\n").encode())
-            time.sleep(0.5)
+            #self.ser.write((f"{mensaje}\n").encode())
+            #time.sleep(0.5)
 
-            if self.ser.in_waiting > 0:
-                respuesta = self.ser.readline().decode().strip()
-                print(f"Respuesta del Arduino: {respuesta}")
+            #if self.ser.in_waiting > 0:
+             #   respuesta = self.ser.readline().decode().strip()
+              #  print(f"Respuesta del Arduino: {respuesta}")
                 
         except serial.SerialException as e:
             print(f"Error al enviar órdenes al Arduino: {e}")

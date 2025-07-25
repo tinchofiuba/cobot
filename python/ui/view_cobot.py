@@ -42,7 +42,7 @@ class DialogGestionarCobots(Ui_Dialog_GestionarCobots, QDialog):
             self.model.cargar_datos_cobots()
 
         else:
-            QMessageBox.warning(self, "Error", "No se pudo borrar el Cobot. Verifique que no esté en uso.")
+            QMessageBox.warning(self, "Error", "No se pudo borrar el Cobot.")
         
     def funcionalidad_signals(self):
         self.model.cobot_borrado_signal.connect(self.cobot_borrado) 
@@ -57,22 +57,29 @@ class DialogGestionarCobots(Ui_Dialog_GestionarCobots, QDialog):
             self.lw_cobots_guardados.addItem("No hay cobots guardados.")
         else:
             self.lw_cobots_guardados.addItems(lista_cobots_guardados)
-            self.te_descripcion_cobot.setPlainText(lista_descripciones[0])
+            self.te_descripcion_cobot.setPlainText(lista_descripciones[0]) 
 
         self.te_descripcion_cobot.clear()
 
 class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
     
-    movimiento_nievo_signal = pyqtSignal(str)  
-    lista_movimientos_posibles = ["Mover a", "A origen", "Begin loop", "End loop", "Girar base"]
+    movimiento_nuevo_signal = pyqtSignal(str)  
+    lista_movimientos_posibles = ["Mover a", "A origen", "Begin loop", "End loop"]
     
-    def __init__(self, parent=None):
+    def __init__(self, nombres_motores, parent=None):
         super(DialogMovimiento, self).__init__(parent)
+        self.nombres_motores = nombres_motores
+        self.armar_lista_movimientos()
         self.setupUi(self)
         self.config_iniciales()  
         self.funcionalidad_le("change")
         self.funcionalidad_pb_movimientos()
         
+    def armar_lista_movimientos(self):
+        if self.nombres_motores != []:
+            for nombre in self.nombres_motores:
+                self.lista_movimientos_posibles.append(f"Girar {nombre}")
+
     def limpiar_y_deshabilitar_line_edits(self):
         for le in [self.le_x, self.le_y, self.le_z, self.le_delay]:
             le.clear()
@@ -86,7 +93,7 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
             self.pb_seleccion_movimiento.setText(self.lista_movimientos_posibles[next_index])
             self.funcionalidad_le("check")
             
-            if self.pb_seleccion_movimiento.text() == "Girar base":
+            if "Girar" in self.pb_seleccion_movimiento.text():
                 self.l_x.setText("Pasos")  # Cambia el texto del label de manera dinámica
                 self.l_y.setText("d_useg")  # Cambia el texto del label de manera dinámica
                 self.l_z.setText("dir") # Cambia el texto del label de manera dinámica
@@ -128,7 +135,7 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
         else:
             self.movimiento = f"{self.pb_seleccion_movimiento.text()}-{vector}-d0"
             
-        self.movimiento_nievo_signal.emit(self.movimiento)
+        self.movimiento_nuevo_signal.emit(self.movimiento)
         
         print(f"Movimiento agregado: {self.movimiento}")
         self.close()
@@ -181,6 +188,7 @@ class view(Ui_Dialog, QDialog):
         self.lw_lista_movimientos.currentItemChanged.connect(self.verificacion_cantidad_movimientos)
 
     def config_iniciales(self):
+        self.condicion_loop = False
         self.error_numerico_le = False
         self.pb_conectar_controlador.setStyleSheet("background-color: #99FF99;")
         self.l_estado_de_conexion.setStyleSheet("color: #c0392b;")
@@ -238,7 +246,6 @@ class view(Ui_Dialog, QDialog):
         if exito:
             self.poblar_widgets("init")
             QMessageBox.information(self, "Éxito", "Cobot cargado correctamente.")
-            
         else:
             QMessageBox.warning(self, "Error", "No se pudo cargar el Cobot. Verifique que el archivo exista y sea válido.")
         
@@ -314,13 +321,15 @@ class view(Ui_Dialog, QDialog):
             QMessageBox.warning(self, "Error", "No se pudo agregar el movimiento. Verifique los datos ingresados.")
         
     def abrir_dialogo_movimiento(self):
-        dialog = DialogMovimiento(self)
-        dialog.movimiento_nievo_signal.connect(self.agregar_movimiento_a_lista) 
+        self.model.nombres_motores = [eslavon.get("nombre", f"Eslavon {num}") for num, eslavon in self.json_ultimo_cobot.get("DOF", {}).items()]
+        print(f"Nombres de motores: {self.model.nombres_motores}")
+        dialog = DialogMovimiento(self.model.nombres_motores, self)
+        dialog.movimiento_nuevo_signal.connect(self.agregar_movimiento_a_lista)
         dialog.exec_()
             
     def enviar_ordenes(self):
         if self.lista_movimientos:
-            self.model.enviar_ordenes(self.lista_movimientos)
+            self.model.enviar_ordenes(self.lista_movimientos, self.condicion_loop)
         else:
             QMessageBox.warning(self, "Error", "No hay movimientos para iniciar la rutina.")
             
