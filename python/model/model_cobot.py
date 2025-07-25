@@ -253,7 +253,7 @@ class ModelCobot(QObject):
             print(f"Enviando mensaje al Arduino: {mensaje}")
             self.ser.write((f"{mensaje}\n").encode())
             time.sleep(0.5)
-            #leo el mensaje serial
+
             if self.ser.in_waiting > 0:
                 respuesta = self.ser.readline().decode().strip()
                 print(f"Respuesta del Arduino: {respuesta}")

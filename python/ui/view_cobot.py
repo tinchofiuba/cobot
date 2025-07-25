@@ -305,6 +305,8 @@ class view(Ui_Dialog, QDialog):
 
     def agregar_movimiento_a_lista(self, movimiento):
         if movimiento:
+            if self.lw_lista_movimientos.count() == 1 and self.lw_lista_movimientos.item(0).text() == "Sin movimientos asignados.":
+                self.lw_lista_movimientos.clear()
             self.lw_lista_movimientos.addItem(movimiento)
             self.lista_movimientos = [self.lw_lista_movimientos.item(i).text() for i in range(self.lw_lista_movimientos.count())]
             self.verificacion_cantidad_movimientos()

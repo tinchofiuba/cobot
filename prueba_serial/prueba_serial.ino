@@ -41,7 +41,7 @@ bool configuracion_terminada = false;
 
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
-void mover_cobot(String mensaje){
+void parsear_girar_base(String mensaje){
 
   byte index_pasos = mensaje.indexOf('_');
   String mensaje_pasos = mensaje.substring(0, index_pasos);
@@ -50,25 +50,64 @@ void mover_cobot(String mensaje){
 
   byte index_delay_bobina = mensaje.indexOf('_');
   String mensaje_delay_bobina = mensaje.substring(0, index_delay_bobina);
-  int delay_bobina_rotamesa = mensaje_delay_bobina.toInt();
+  int delay_bobina = mensaje_delay_bobina.toInt();
   mensaje = mensaje.substring(index_delay_bobina+1);
 
   byte index_direccion = mensaje.indexOf('_');
   String mensaje_direccion = mensaje.substring(0, index_direccion);
-  int direccion_rotamesa = mensaje_direccion.toInt();
+  int direccion = mensaje_direccion.toInt();
   mensaje = mensaje.substring(index_direccion+1);
 
-  int delay_rotamesa = mensaje.toInt();
+  int delay_entre_rutinas = mensaje.toInt();
 
-  digitalWrite(11,direccion_rotamesa);
+  digitalWrite(11,direccion);
 
   for (int i = 0; i < num_pasos ; i++){  
 
     digitalWrite(13, HIGH);
-    delayMicroseconds(15000); 
+    delayMicroseconds(delay_bobina); 
     digitalWrite(13, LOW); 
-    delayMicroseconds(15000); 
+    delayMicroseconds(delay_bobina); 
     }
+
+  if (delay_entre_rutinas != 0)
+  {
+    delay(delay_entre_rutinas);
+  }
+
+
+  
+}
+
+void parsear_movimientos(String mensaje){
+  if (mensaje.startswith("gb_"){
+    mensaje = mensaje.substring(3);
+
+  }
+
+}
+
+
+void mover_cobot(String mensaje, bool loop){
+
+  if (loop){ 
+
+    mensaje = mensaje.substring(3) //borro 'bl_'
+
+    while (Serial.available() == 0){
+      
+      parsear_movimientos(mensaje);
+      
+      if (Serial.available() > 0){
+        if (Serial.readStringUntil('\n') == "break_loop"){
+          break;
+
+        }
+      }     
+    } 
+
+  }
+
 }
 
 String decodificar_servo(String string_python){ //decodificación y reconstrucción del mensaje para setear un servo
@@ -244,7 +283,7 @@ void esperando_seteo() {
 
             }
           }     
-        } //       p_base,2,3,4,0,1.8
+        } 
       }
       else if (mensaje == "fin_seteo"){
         break; //finaliza el seteado del cobot

@@ -1,6 +1,6 @@
 {
-    "nombre": "rotamesa",
-    "descripcion": "prueba de rotames",
+    "nombre": "mejoras",
+    "descripcion": "sarasa",
     "DOF": {
         "1": {
             "nombre": "rotamesa",
@@ -16,7 +16,6 @@
         }
     },
     "movimientos": [
-        "Sin movimientos asignados.",
-        "Girar base-(50,20000,0)-d0"
+        "Girar base-(200,15000,1)-d0"
     ]
 }
