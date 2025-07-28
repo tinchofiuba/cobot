@@ -1,28 +1,8 @@
 {
-    "rotamesa": {
-        "nombre": "rotamesa",
-        "descripcion": "prueba de rotames",
-        "DOF": {
-            "1": {
-                "nombre": "rotamesa",
-                "largo": 0.0,
-                "rotacion": "z",
-                "motor": {
-                    "tipo": "Paso a paso",
-                    "pin": 13,
-                    "direccion": 11,
-                    "enable": 12,
-                    "angulo_minimo": 1.8
-                }
-            }
-        },
-        "movimientos": [
-            "Girar base-(50,20000,0)-d0"
-        ]
-    },
     "rotamesa_25_7_1056_hs": {
         "nombre": "rotamesa_25_7_1056_hs",
         "descripcion": "90cm largo 66cm alto 36\u00ba",
+        "RPM": 3,
         "DOF": {
             "1": {
                 "nombre": "rotamesa",
@@ -32,8 +12,7 @@
                     "tipo": "Paso a paso",
                     "pin": 13,
                     "direccion": 11,
-                    "enable": 12,
-                    "angulo_minimo": 1.8
+                    "enable": 12
                 }
             }
         },
@@ -44,17 +23,39 @@
     "mejoras": {
         "nombre": "mejoras",
         "descripcion": "sarasa",
+        "RPM": 3,
         "DOF": {
             "1": {
-                "nombre": "rotamesa",
+                "nombre": "z",
                 "largo": 0.0,
                 "rotacion": "z",
                 "motor": {
                     "tipo": "Paso a paso",
                     "pin": 13,
                     "direccion": 11,
-                    "enable": 12,
-                    "angulo_minimo": 1.8
+                    "enable": 12
+                }
+            }
+        },
+        "movimientos": [
+            "Girar rotamesa-(50,5000,1)-d0",
+            "Girar rotamesa-(50,18000,0)-d0"
+        ]
+    },
+    "primera prueba": {
+        "nombre": "primera prueba",
+        "descripcion": "primera prueba con ikpy",
+        "RPM": 3.0,
+        "DOF": {
+            "1": {
+                "nombre": "z",
+                "largo": 0.0,
+                "rotacion": "z",
+                "motor": {
+                    "tipo": "Paso a paso",
+                    "pin": 13,
+                    "direccion": 11,
+                    "enable": 12
                 }
             }
         },

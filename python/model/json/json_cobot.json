@@ -1,17 +1,17 @@
 {
-    "nombre": "mejoras",
-    "descripcion": "sarasa",
+    "nombre": "primera prueba",
+    "descripcion": "primera prueba con ikpy",
+    "RPM": 3.0,
     "DOF": {
         "1": {
-            "nombre": "rotamesa",
+            "nombre": "z",
             "largo": 0.0,
             "rotacion": "z",
             "motor": {
                 "tipo": "Paso a paso",
                 "pin": 13,
                 "direccion": 11,
-                "enable": 12,
-                "angulo_minimo": 1.8
+                "enable": 12
             }
         }
     },

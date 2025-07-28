@@ -174,7 +174,7 @@ class view(Ui_Dialog, QDialog):
     def __init__(self, parent=None):
         super(view, self).__init__(parent)
         self.setupUi(self)
-        self.lista_line_edits = [self.le_nombre_cobot, self.le_nombre_eslavon, self.le_largo_eslavon, self.le_angulo_minimo_eslavon, self.le_pin_pasos_eslavon, self.le_pin_direccion_eslavon, self.le_pin_enable_eslavon]
+        self.lista_line_edits = [self.le_nombre_cobot, self.le_nombre_eslavon, self.le_largo_eslavon, self.le_pin_pasos_eslavon, self.le_pin_direccion_eslavon, self.le_pin_enable_eslavon]
         self.model = ModelCobot()
         self.config_iniciales()
         self.poblar_widgets("init")
@@ -253,7 +253,7 @@ class view(Ui_Dialog, QDialog):
         todos_llenos = all(le.text().strip() != "" for le in self.lista_line_edits)
         try:
             float(self.le_largo_eslavon.text())
-            float(self.le_angulo_minimo_eslavon.text())
+            float(self.le_RPM_cobot.text())
             numericos_validos = True
         except ValueError:
             numericos_validos = False
@@ -341,16 +341,14 @@ class view(Ui_Dialog, QDialog):
                 "tipo": self.pb_seleccion_motor.text(),
                 "pin": int(self.le_pin_pasos_eslavon.text()),
                 "direccion": int(self.le_pin_direccion_eslavon.text()),
-                "enable": int(self.le_pin_enable_eslavon.text()),
-                "angulo_minimo": float(self.le_angulo_minimo_eslavon.text())
+                "enable": int(self.le_pin_enable_eslavon.text())
             }
         } if self.pb_seleccion_motor.text() == "Paso a paso" else {
             "nombre": self.le_nombre_eslavon.text(),
             "largo": float(self.le_largo_eslavon.text()),
             "motor": {
                 "tipo": self.pb_seleccion_motor.text(),
-                "pin": int(self.le_pin_pasos_eslavon.text()),
-                "angulo_minimo": float(self.le_angulo_minimo_eslavon.text())
+                "pin": int(self.le_pin_pasos_eslavon.text())
             }
         }
         self.model.guardar_eslavon(str(self.hs_numero_DOF.value()),str(self.hs_selector_DOF.value()), self.datos_eslavon)
@@ -360,6 +358,7 @@ class view(Ui_Dialog, QDialog):
         return {
             "nombre": self.le_nombre_cobot.text(),
             "descripcion": self.te_descripcion_cobot.toPlainText(),
+            "RPM":float(self.le_RPM_cobot.text()),
             "DOF": self.json_ultimo_cobot.get("DOF", {}),
             "movimientos" : self.lista_movimientos
         }
@@ -404,7 +403,7 @@ class view(Ui_Dialog, QDialog):
                 eslavon = self.json_ultimo_cobot.get("DOF", {}).get(str(valor), {})
                 self.le_largo_eslavon.setText(str(eslavon.get("largo", 0)))
                 self.le_nombre_eslavon.setText(eslavon.get("nombre", "Cintura"))
-                self.le_angulo_minimo_eslavon.setText(str(eslavon.get("angulo_minimo", 1.8)))
+                self.le_RPM_cobot.setText(str(self.json_ultimo_cobot.get("RPM", 3)))
                 self.pb_seleccion_motor.setText(eslavon.get("motor", {}).get("tipo", "Paso a paso"))
                 self.le_pin_pasos_eslavon.setText(str(eslavon.get("motor", {}).get("pin", 0)))
                 if self.pb_seleccion_motor.text() == "Paso a paso":
@@ -418,7 +417,6 @@ class view(Ui_Dialog, QDialog):
             else:
                 self.le_largo_eslavon.setText("0")
                 self.le_nombre_eslavon.setText("setear!")
-                self.le_angulo_minimo_eslavon.setText("1.8")
                 self.pb_seleccion_motor.setText("Paso a paso")
                 self.le_pin_pasos_eslavon.setText("0")
                 self.le_pin_direccion_eslavon.setText("0")
@@ -446,6 +444,7 @@ class view(Ui_Dialog, QDialog):
             if condicion == "init":
                 self.le_nombre_cobot.setText(self.json_ultimo_cobot.get("nombre", ""))
                 self.te_descripcion_cobot.setText(self.json_ultimo_cobot.get("descripcion", ""))
+                self.le_RPM_cobot.setText(str(self.json_ultimo_cobot.get("RPM", 3)))
                 self.hs_numero_DOF.setValue(len(self.json_ultimo_cobot.get("DOF", [])))
                 self.l_valor_numero_DOF.setText(str(self.hs_numero_DOF.value()))
                 self.hs_selector_DOF.setMaximum(len(self.json_ultimo_cobot.get("DOF", [])))
@@ -456,7 +455,6 @@ class view(Ui_Dialog, QDialog):
 
                 self.le_largo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(self.valor_selector_DOF, {}).get("largo", 1111)))
                 self.pb_seleccion_motor.setText(self.json_ultimo_cobot.get("DOF", {}).get(self.valor_selector_DOF, {}).get("motor", {}).get("tipo", "Paso a paso"))
-                self.le_angulo_minimo_eslavon.setText(str(self.json_ultimo_cobot.get("DOF", {}).get(self.valor_selector_DOF, {}).get("motor", {}).get("angulo_minimo", 1)))
                 self.le_nombre_eslavon.setText(self.json_ultimo_cobot.get("DOF", {}).get(self.valor_selector_DOF, {}).get("nombre", "Cintura"))
                 if self.pb_seleccion_motor.text() == "Paso a paso":
                     self.le_pin_direccion_eslavon.setEnabled(True)
