@@ -1,6 +1,7 @@
 
 #include <Servo.h>
 #include <ArduinoJson.h>
+#define max_movimientos 100
 
 int bauds = 9600;
 int ledPin = 13;
@@ -16,9 +17,11 @@ struct Movimiento {
   String tipo; 
   int pasos;
   int delay_bobina;
-  int direccion;
+  byte direccion;
   int delay_total;
 };
+
+Movimiento movimientos[max_movimientos]; 
 
 byte cantidad_movimientos = 0;
 
@@ -51,9 +54,9 @@ bool configuracion_terminada = false;
 
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
-
 void asignar_movimiento(String mensaje, byte m) {
 
+    //como el mje comenzaba con G1, .. Gn y le saqué la G queda solo 1, 2, ... ,n
     byte index_motor = mensaje.indexOf('_');
     String motor = mensaje.substring(0, index_motor);
     int index_struct_motor = motor.toInt();
@@ -76,50 +79,50 @@ void asignar_movimiento(String mensaje, byte m) {
 
     int delay_entre_rutinas = mensaje.toInt();
   
-  movimientos[m].tipo = tipo;
-  movimientos[m].pasos = pasos.toInt();
-  movimientos[m].delay_bobina = delay_bobina.toInt();
-  movimientos[m].direccion = direccion.toInt();
-  movimientos[m].delay_total = delay_total.toInt();
+    movimientos[m].tipo = index_struct_motor;
+    movimientos[m].pasos = num_pasos;
+    movimientos[m].delay_bobina = delay_bobina;
+    movimientos[m].direccion = direccion;
+    movimientos[m].delay_total = delay_entre_rutinas;
 
 }
 
 void mover_cobot(String mensaje, bool condicion_loop){ 
 
-  // si quiero mover un motor una determinada cantidad de pasos
-  if (mensaje.startsWith("G")){
+  if (condicion_loop == false){
 
-    mensaje = mensaje.substring(1);
+    // si quiero mover un motor una determinada cantidad de pasos (es algo provisorio)
 
-  }
-
-  for (byte m = 0; m < cantidad_movimientos; m++){
-
-    asignar_movimiento(mensaje.substring(0, index_movimiento), m);
-    mensaje = mensaje.substring(index_movimiento+1);
-
-  }
-
-
-
-  digitalWrite(pin_dir, direccion);
-  digitalWrite(pin_enable, LOW);
-
-  for (int i = 0; i < num_pasos ; i++){  
-
-    digitalWrite(pin_pasos, HIGH);
-    delayMicroseconds(delay_bobina); 
-    digitalWrite(pin_pasos, LOW); 
-    delayMicroseconds(delay_bobina); 
-
+    if (mensaje.startsWith("G_")){
+      mensaje = mensaje.substring(1); //le remuevo "G" a "G1", "G2" ... "Gn"
     }
 
-  if (delay_entre_rutinas != 0)
+    for (byte m = 0; m < cantidad_movimientos; m++){
+      byte index_movimiento = mensaje.indexOf(';'); //busco el separador ";" que separa movimientos
+      asignar_movimiento(mensaje.substring(0, index_movimiento), m);
+      if (m < cantidad_movimientos - 1){
+      mensaje = mensaje.substring(index_movimiento+1);
+      }
+    }
 
-  {
-    delay(delay_entre_rutinas);
+    digitalWrite(motores[0].direccion, movimientos[0].direccion);
+    digitalWrite(motores[0].enable, LOW);
+    
+    for (int i = 0; i < movimientos[0].pasos ; i++){  
+
+      digitalWrite(motores[0].pasos, HIGH);
+      delayMicroseconds(movimientos[0].delay_bobina); 
+      digitalWrite(motores[0].pasos, LOW); 
+      delayMicroseconds(movimientos[0].delay_bobina); 
+
+      }
+
+    if (movimientos[0].delay_total != 0)
+
+    {
+      delay(movimientos[0].delay_total);
+    }
   }
-
 }
 
 String decodificar_servo(String string_python){ //decodificación y reconstrucción del mensaje para setear un servo
@@ -344,16 +347,16 @@ void loop()
 
       // busco el 1ero _ así separo Nm del número de movimientos y de _ de NMx_ 
       byte index_numero_movimientos = mensaje.indexOf('_');
-      cantidad_movimientos = (byte)mensaje.substring(2, index_numero_movimientos).toInt();
+      cantidad_movimientos = (byte)mensaje.substring(2, index_numero_movimientos).toInt(); //me quedo con la cantidad de movimientos
 
-      Movimiento movimientos[cantidad_movimientos]; 
+      mensaje = mensaje.substring(index_numero_movimientos+1); //remuevo la cantidad de movimientos, limpiando el mensaje
 
-      if (mensaje.startsWith("bl_")){
-        mensaje = mensaje.substring(3);
+      if (mensaje.startsWith("bl_")){ // solo si hay un beginloop
+        mensaje = mensaje.substring(3).substring(3, mensaje.length() - 3);
         mover_cobot(mensaje, true);
       }
 
-      else{
+      else{ // en caso de no haber loop
         mover_cobot(mensaje, false);
       }
 

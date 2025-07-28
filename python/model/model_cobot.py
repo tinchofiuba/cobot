@@ -259,8 +259,11 @@ class ModelCobot(QObject):
             codificacion_movimiento += index_eslavon #genero G1 G2 .. Gn
             vector_parseado = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",") # queda del tipo ["n_pasos","d_bobina","1/0"]
             delay = movimiento_spliteado[2].replace("d", "")
+
+            #En este caso particular lo que sale es G_xx_yy_zz_delay
             
             movimiento_codificado.append(f"{codificacion_movimiento}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}")
+        #aca junta y lo deja del tipo G_xx1_yy1_zz1_delay1;G_xx2_yy2_zz2_delay2;...
         
         return ";".join(movimiento_codificado) + ";"
 
