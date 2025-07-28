@@ -403,7 +403,7 @@ class view(Ui_Dialog, QDialog):
                 eslavon = self.json_ultimo_cobot.get("DOF", {}).get(str(valor), {})
                 self.le_largo_eslavon.setText(str(eslavon.get("largo", 0)))
                 self.le_nombre_eslavon.setText(eslavon.get("nombre", "Cintura"))
-                self.le_RPM_cobot.setText(str(self.json_ultimo_cobot.get("RPM", 3)))
+                self.le_RPM_cobot.setText(str(self.json_ultimo_cobot.get("RPM", 3.0)))
                 self.pb_seleccion_motor.setText(eslavon.get("motor", {}).get("tipo", "Paso a paso"))
                 self.le_pin_pasos_eslavon.setText(str(eslavon.get("motor", {}).get("pin", 0)))
                 if self.pb_seleccion_motor.text() == "Paso a paso":

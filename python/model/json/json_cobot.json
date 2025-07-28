@@ -1,7 +1,7 @@
 {
     "nombre": "primera prueba",
     "descripcion": "primera prueba con ikpy",
-    "RPM": 3.0,
+    "RPM": 2.0,
     "DOF": {
         "1": {
             "nombre": "z",

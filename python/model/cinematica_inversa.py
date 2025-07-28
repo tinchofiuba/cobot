@@ -24,11 +24,13 @@ class CinematicaInversa:
                 rotation=[0, 0, 1],
                 parent_index=-1
             ),
+            
             URDFLink(
                 name="hombro",
                 translation_vector=[0, 0, 0.2],
                 rotation=[0, 1, 0]
             ),
+            
             URDFLink(
                 name="codo",
                 translation_vector=[0, 0, 0.2],
