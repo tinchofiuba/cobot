@@ -38,6 +38,7 @@ class ModelCobot(QObject):
 
     json_ultimo_cobot = ultimo_cobot 
     json_cobots_guardados = cobots_guardados
+    cobot_seteado_signal = pyqtSignal(bool)
     cobot_guardado_signal = pyqtSignal(bool)  
     poblar_lw_cobots_signal = pyqtSignal(list, list)
     cobot_borrado_signal = pyqtSignal(bool)  
@@ -56,9 +57,9 @@ class ModelCobot(QObject):
         lista_setup =[]
         for key, value in json_cobot.items():
             if value['motor']['tipo'] == "Paso a paso":
-                json_plano += f"p_{value['nombre']},{value['motor']['enable']},{value['motor']['pin']},{value['motor']['direccion']},{value['largo']},{value['motor']['angulo_minimo']};"
+                json_plano += f"p_{value['nombre']},{value['motor']['enable']},{value['motor']['pin']},{value['motor']['direccion']};"
             else:
-                json_plano += f"s_{value['nombre']},{value['motor']['pin']},{value['largo']},{value['motor']['angulo_minimo']};"
+                json_plano += f"s_{value['nombre']},{value['motor']['pin']};"
         print("")
         print(f"json_plano: {json_plano}")
         print("")
@@ -79,7 +80,7 @@ class ModelCobot(QObject):
                     for eslavon in json_plano_spliteado:
                         print(f"----->   Enviando al Arduino: {eslavon}")
                         self.ser.write((eslavon + "\n").encode())
-                        time.sleep(0.5)  
+                        time.sleep(0.2)  
 
                         while True:
                             respuesta = self.ser.readline().decode().strip()
@@ -94,6 +95,7 @@ class ModelCobot(QObject):
                                 print("Esperando confirmación correcta del Arduino...")
                     print("Enviando el mensaje de finalización de seteo al Arduino ")
                     self.ser.write(b"fin_seteo\n")
+                    self.cobot_seteado_signal.emit(True)
                     print("listo, ya debería estar seteado")
             else:
                 print(f"El archivo {path_json} no existe.")
@@ -248,6 +250,7 @@ class ModelCobot(QObject):
         indice_eslavon = {eslavon.get("nombre", ""): idx for idx, eslavon in self.json_ultimo_cobot.get("DOF", {}).items()}
         
         for movimiento in lista_mov:
+            print(movimiento)
             
             movimiento_spliteado = movimiento.split("-")
             tipo_movimiento = movimiento_spliteado[0].split(" ")[0]  # Girar
@@ -263,13 +266,14 @@ class ModelCobot(QObject):
                 delay = movimiento_spliteado[2].replace("d", "")
                 #En este caso particular lo que sale es G_xx_yy_zz_delay
                 movimiento_codificado.append(f"{codificacion_movimiento}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}")
-                #aca junta y lo deja del tipo G_xx1_yy1_zz1_delay1;G_xx2_yy2_zz2_delay2;...
                 
             elif codificacion_movimiento == "M":
-                a = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",")  # 
-                movimiento_codificado = f"M_{a[0]}_{a[1]}_{a[2]}_{a[3]}"
+                vector_parseado = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",")  # 
                 delay = movimiento_spliteado[2].replace("d", "")
+                movimiento_codificado.append(f"{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}")
+                print(f"movimiento codificado: {movimiento_codificado}")
         
+        #aca junta y lo deja del tipo G_xx1_yy1_zz1_delay1;G_xx2_yy2_zz2_delay2;...
         return ";".join(movimiento_codificado) + ";"
 
     def enviar_ordenes(self,mensaje: list, condicion_loop: bool):

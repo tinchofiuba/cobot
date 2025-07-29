@@ -1,7 +1,7 @@
 
 #include <Servo.h>
 #include <ArduinoJson.h>
-#define max_movimientos 100
+#define max_movimientos 50
 
 int bauds = 9600;
 int ledPin = 13;
@@ -13,11 +13,14 @@ byte p = 0, s = 0;
 #define MAX_SERVOS 6
 #define MAX_PAP 6
 
+struct Eslabon {
+  int pasos;      
+  byte direccion; 
+};
+
 struct Movimiento {
-  String tipo; 
-  int pasos;
-  int delay_bobina;
-  byte direccion;
+  Eslabon eslabones[MAX_PAP];
+  int delay_bobina;//esto va a estar hardcodeado, hay que cambiarlo y no tengo ganas
   int delay_total;
 };
 
@@ -28,8 +31,6 @@ byte cantidad_movimientos = 0;
 struct servoConfig {
   String nombre;
   byte pin;
-  byte largo;
-  float angulo_paso;
   Servo objeto;
   
 };
@@ -43,8 +44,6 @@ struct papconfig {
   byte enable;
   byte pasos;
   byte direccion;
-  byte largo;
-  float angulo_paso;
 };
 
 byte numMotores = 0;
@@ -55,36 +54,16 @@ bool configuracion_terminada = false;
 // FIN DE CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
 void asignar_movimiento(String mensaje, byte m) {
-
-    //como el mje comenzaba con G1, .. Gn y le saqué la G queda solo 1, 2, ... ,n
-    byte index_motor = mensaje.indexOf('_');
-    String motor = mensaje.substring(0, index_motor);
-    int index_struct_motor = motor.toInt();
-    mensaje = mensaje.substring(index_motor+1);
-
-    byte index_pasos = mensaje.indexOf('_');
-    String mensaje_pasos = mensaje.substring(0, index_pasos);
-    int num_pasos = mensaje_pasos.toInt();
-    mensaje = mensaje.substring(index_pasos+1);
-
-    byte index_delay_bobina = mensaje.indexOf('_');
-    String mensaje_delay_bobina = mensaje.substring(0, index_delay_bobina);
-    int delay_bobina = mensaje_delay_bobina.toInt();
-    mensaje = mensaje.substring(index_delay_bobina+1);
-
-    byte index_direccion = mensaje.indexOf('_');
-    String mensaje_direccion = mensaje.substring(0, index_direccion);
-    int direccion = mensaje_direccion.toInt();
-    mensaje = mensaje.substring(index_direccion+1);
-
-    int delay_entre_rutinas = mensaje.toInt();
-  
-    movimientos[m].tipo = index_struct_motor;
-    movimientos[m].pasos = num_pasos;
-    movimientos[m].delay_bobina = delay_bobina;
-    movimientos[m].direccion = direccion;
-    movimientos[m].delay_total = delay_entre_rutinas;
-
+    for (byte loc_p = 0; loc_p < p; loc_p++){
+      byte index = mensaje.indexOf('_');
+      int pasos_motor = mensaje.substring(0, index).toInt();
+      Serial.println(abs(pasos_motor));
+      movimientos[m].eslabones[loc_p].pasos = abs(pasos_motor);
+      movimientos[m].eslabones[loc_p].direccion = (pasos_motor > 0) ? 1 : 0;
+      movimientos[m].delay_bobina = 1000; //super hardcodeado
+      mensaje = mensaje.substring(index+1);
+    }
+    movimientos[m].delay_total = mensaje.toInt();
 }
 
 void mover_cobot(String mensaje, bool condicion_loop){ 
@@ -103,12 +82,26 @@ void mover_cobot(String mensaje, bool condicion_loop){
       if (m < cantidad_movimientos - 1){
       mensaje = mensaje.substring(index_movimiento+1);
       }
+      Serial.print(movimientos[0].eslabones[0].pasos);
+      Serial.print(" ");
+      Serial.print(movimientos[0].eslabones[1].pasos);
+      Serial.print(" ");
+      Serial.print(movimientos[0].eslabones[2].pasos);
+      Serial.print(" ");
+      Serial.print(movimientos[0].eslabones[0].direccion);
+      Serial.print(" ");
+      Serial.print(movimientos[0].eslabones[2].direccion);
+      Serial.print(" ");
+      Serial.println(movimientos[0].eslabones[1].direccion);
+
     }
 
-    digitalWrite(motores[0].direccion, movimientos[0].direccion);
+
+
+    digitalWrite(motores[0].direccion, movimientos[0].eslabones[0].direccion);
     digitalWrite(motores[0].enable, LOW);
     
-    for (int i = 0; i < movimientos[0].pasos ; i++){  
+    for (int i = 0; i < movimientos[0].eslabones[0].pasos ; i++){  
 
       digitalWrite(motores[0].pasos, HIGH);
       delayMicroseconds(movimientos[0].delay_bobina); 
@@ -127,7 +120,7 @@ void mover_cobot(String mensaje, bool condicion_loop){
 
 String decodificar_servo(String string_python){ //decodificación y reconstrucción del mensaje para setear un servo
 
-  byte fin, largo_campos = 4;
+  byte fin, largo_campos = 2;
   String parseo;
   String reconstruccion = string_python.substring(0,2); // borro el "p_" y lo guardo para reconstruir
   string_python = string_python.substring(2);
@@ -165,12 +158,6 @@ String decodificar_servo(String string_python){ //decodificación y reconstrucci
         pinMode(servos[p].pin, OUTPUT);
         servos[p].objeto.attach(servos[p].pin);
         break;
-      case 2:
-        servos[p].largo = campos[i].toInt(); 
-        break;
-      case 3:
-        servos[p].angulo_paso = campos[i].toInt(); 
-        break;
     }
     
   }
@@ -180,7 +167,7 @@ String decodificar_servo(String string_python){ //decodificación y reconstrucci
 
 String decodificar_pap(String string_python){ //decodificación y reconstrucción del mensaje para setear un paso a paso
 
-  byte fin, largo_campos = 6;
+  byte fin, largo_campos = 4;
   String parseo;
   String reconstruccion = string_python.substring(0,2); // borro el "p_" y lo guardo para reconstruir
   string_python = string_python.substring(2);  
@@ -208,7 +195,6 @@ String decodificar_pap(String string_python){ //decodificación y reconstrucció
     }
   
   for (byte i = 0; i < largo_campos; i++){
-
     switch (i) {
       case 0:
         motores[p].nombre = campos[i]; 
@@ -223,22 +209,15 @@ String decodificar_pap(String string_python){ //decodificación y reconstrucció
         pinMode(motores[p].pasos, OUTPUT);
         break;
       case 3:
-        motores[p].direccion = campos[i].toInt();
-        pinMode(motores[p].direccion, OUTPUT); 
-        digitalWrite(motores[p].direccion, LOW);
-        break;
-      case 4:
-        motores[p].largo = campos[i].toInt(); 
-        break;
-      case 5:
-        motores[p].angulo_paso = campos[i].toFloat(); 
+        motores[p].direccion = campos[i].toInt(); 
+        pinMode(motores[p].direccion, OUTPUT);
         break;
     }
-    
   }
 
   p++;
   return reconstruccion;
+
   }
 
 String setear_cobot(String datos) {
@@ -348,7 +327,6 @@ void loop()
       // busco el 1ero _ así separo Nm del número de movimientos y de _ de NMx_ 
       byte index_numero_movimientos = mensaje.indexOf('_');
       cantidad_movimientos = (byte)mensaje.substring(2, index_numero_movimientos).toInt(); //me quedo con la cantidad de movimientos
-
       mensaje = mensaje.substring(index_numero_movimientos+1); //remuevo la cantidad de movimientos, limpiando el mensaje
 
       if (mensaje.startsWith("bl_")){ // solo si hay un beginloop
