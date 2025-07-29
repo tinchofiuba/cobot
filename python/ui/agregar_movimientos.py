@@ -77,7 +77,7 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Agregar movimientos"))
         self.label.setText(_translate("Dialog", "Movimiento"))
-        self.pb_seleccion_movimiento.setText(_translate("Dialog", "Mover a"))
+        self.pb_seleccion_movimiento.setText(_translate("Dialog", "Mover_a"))
         self.l_x.setText(_translate("Dialog", "X"))
         self.label_5.setText(_translate("Dialog", "Delay [ms]"))
         self.l_y.setText(_translate("Dialog", "d_useg"))

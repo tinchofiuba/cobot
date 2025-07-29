@@ -1,5 +1,5 @@
 {
-    "nombre": "primera prueba",
+    "nombre": "primera prueba2",
     "descripcion": "primera prueba con ikpy",
     "RPM": 2.0,
     "DOF": {
@@ -16,7 +16,6 @@
         }
     },
     "movimientos": [
-        "Girar rotamesa-(50,5000,1)-d0",
-        "Girar rotamesa-(50,18000,0)-d0"
+        "Mover_a-(10,10,10)-d0"
     ]
 }

@@ -253,22 +253,26 @@ class ModelCobot(QObject):
             tipo_movimiento = movimiento_spliteado[0].split(" ")[0]  # Girar
             codificacion_movimiento = tipo_movimiento[0]
             
-            eslavon = movimiento_spliteado[0].split(" ")[1]  # base
-            index_eslavon = indice_eslavon.get(eslavon, None)
+            if codificacion_movimiento == "G":
             
-            codificacion_movimiento += index_eslavon #genero G1 G2 .. Gn
-            vector_parseado = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",") # queda del tipo ["n_pasos","d_bobina","1/0"]
-            delay = movimiento_spliteado[2].replace("d", "")
-
-            #En este caso particular lo que sale es G_xx_yy_zz_delay
-            
-            movimiento_codificado.append(f"{codificacion_movimiento}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}")
-        #aca junta y lo deja del tipo G_xx1_yy1_zz1_delay1;G_xx2_yy2_zz2_delay2;...
+                eslavon = movimiento_spliteado[0].split(" ")[1]  # base
+                index_eslavon = indice_eslavon.get(eslavon, None)
+                
+                codificacion_movimiento += index_eslavon #genero G1 G2 .. Gn
+                vector_parseado = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",") # queda del tipo ["n_pasos","d_bobina","1/0"]
+                delay = movimiento_spliteado[2].replace("d", "")
+                #En este caso particular lo que sale es G_xx_yy_zz_delay
+                movimiento_codificado.append(f"{codificacion_movimiento}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}")
+                #aca junta y lo deja del tipo G_xx1_yy1_zz1_delay1;G_xx2_yy2_zz2_delay2;...
+                
+            elif codificacion_movimiento == "M":
+                a = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",")  # 
+                movimiento_codificado = f"M_{a[0]}_{a[1]}_{a[2]}_{a[3]}"
+                delay = movimiento_spliteado[2].replace("d", "")
         
         return ";".join(movimiento_codificado) + ";"
 
     def enviar_ordenes(self,mensaje: list, condicion_loop: bool):
-
         try:
             if condicion_loop == False:
                 mensaje = f"Mover_Nm{len(mensaje)}_" + self.codificar_orden_de_movimiento(mensaje)
@@ -276,12 +280,6 @@ class ModelCobot(QObject):
                 mensaje =  f"Mover_Nm{len(mensaje)-2}_bl_"+ self.codificar_orden_de_movimiento(mensaje) + "_el"
                 
             print(f"Enviando mensaje al Arduino: {mensaje}")
-            #self.ser.write((f"{mensaje}\n").encode())
-            #time.sleep(0.5)
-
-            #if self.ser.in_waiting > 0:
-             #   respuesta = self.ser.readline().decode().strip()
-              #  print(f"Respuesta del Arduino: {respuesta}")
                 
         except serial.SerialException as e:
             print(f"Error al enviar órdenes al Arduino: {e}")

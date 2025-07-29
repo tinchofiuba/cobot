@@ -64,7 +64,7 @@ class DialogGestionarCobots(Ui_Dialog_GestionarCobots, QDialog):
 class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
     
     movimiento_nuevo_signal = pyqtSignal(str)  
-    lista_movimientos_posibles = ["Mover a", "A origen", "Begin loop", "End loop"]
+    lista_movimientos_posibles = ["Mover_a", "A_origen", "Begin loop", "End loop"]
     
     def __init__(self, nombres_motores, parent=None):
         super(DialogMovimiento, self).__init__(parent)
@@ -94,9 +94,9 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
             self.funcionalidad_le("check")
             
             if "Girar" in self.pb_seleccion_movimiento.text():
-                self.l_x.setText("Pasos")  # Cambia el texto del label de manera dinámica
-                self.l_y.setText("d_useg")  # Cambia el texto del label de manera dinámica
-                self.l_z.setText("dir") # Cambia el texto del label de manera dinámica
+                self.l_x.setText("Angulo")  
+                self.l_y.setText("RPM")  
+                self.l_z.setText("dir") 
             else:
                 self.l_x.setText("X")
                 self.l_y.setText("Y")
@@ -123,9 +123,7 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
         
     def agregar_movimiento(self):
         delay = ""
-        if self.pb_seleccion_movimiento.text() == "Girar base":
-            vector = f"({self.le_x.text()},{self.le_y.text()},{self.le_z.text()})"
-        elif self.pb_seleccion_movimiento.text() == "Loop" or self.pb_seleccion_movimiento.text() == "Endloop":
+        if self.pb_seleccion_movimiento.text() == "Loop" or self.pb_seleccion_movimiento.text() == "Endloop":
             vector = ""
         else:
             vector = f"({self.le_x.text()},{self.le_y.text()},{self.le_z.text()})"
@@ -295,7 +293,6 @@ class view(Ui_Dialog, QDialog):
             self.pb_remover_movimiento.setEnabled(True)
             self.pb_borrar_todo_movimiento.setEnabled(True)
             self.pb_enviar_ordenes.setEnabled(True)
-        
             
     def borrar_movimiento(self, cantidad):
         if cantidad == "uno":
