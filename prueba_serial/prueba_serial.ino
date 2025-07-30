@@ -193,7 +193,7 @@ String decodificar_pap(String string_python){ //decodificación y reconstrucció
       case 1:
         motores[p].enable = campos[i].toInt();
         pinMode(motores[p].enable, OUTPUT);
-        digitalWrite(motores[p].enable, HIGH);
+        digitalWrite(motores[p].enable, LOW);
         break;
       case 2:
         motores[p].pasos = campos[i].toInt(); 
@@ -347,7 +347,7 @@ void loop()
 
     else if (mensaje.startsWith("Realizar movimientos")){
       Serial.println(cantidad_movimientos);
-      for (byte n_mov = 0; n_mov < cantidad_movimientos; n_mov++){
+      for (byte n_mov = 0; n_mov < 100; n_mov++){
           //realizar_movimientos(n_mov);
           digitalWrite(11,HIGH);
           delayMicroseconds(1000);
