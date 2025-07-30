@@ -1,15 +1,16 @@
 
 #include <Servo.h>
 #include <ArduinoJson.h>
-#define max_movimientos 50
+#define max_movimientos 10
 
 int bauds = 9600;
 int ledPin = 13;
 int blinkDelay = 333;  // 1 segundo por defecto
 bool isConectado = false;
 byte p = 0, s = 0;
-// CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 
+
+// CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 #define MAX_SERVOS 6
 #define MAX_PAP 6
 
@@ -37,7 +38,6 @@ struct servoConfig {
 
 byte numServos = 0;
 servoConfig servos[MAX_SERVOS];
-
 
 struct papconfig {
   String nombre;
@@ -82,6 +82,7 @@ void mover_cobot(String mensaje, bool condicion_loop){
       if (m < cantidad_movimientos - 1){
       mensaje = mensaje.substring(index_movimiento+1);
       }
+
       Serial.print(movimientos[0].eslabones[0].pasos);
       Serial.print(" ");
       Serial.print(movimientos[0].eslabones[1].pasos);
@@ -90,13 +91,11 @@ void mover_cobot(String mensaje, bool condicion_loop){
       Serial.print(" ");
       Serial.print(movimientos[0].eslabones[0].direccion);
       Serial.print(" ");
-      Serial.print(movimientos[0].eslabones[2].direccion);
+      Serial.print(movimientos[0].eslabones[1].direccion);
       Serial.print(" ");
-      Serial.println(movimientos[0].eslabones[1].direccion);
+      Serial.println(movimientos[0].eslabones[2].direccion);
 
     }
-
-
 
     digitalWrite(motores[0].direccion, movimientos[0].eslabones[0].direccion);
     digitalWrite(motores[0].enable, LOW);

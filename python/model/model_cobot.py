@@ -317,7 +317,7 @@ class ModelCobot(QObject):
             mensaje = "finalizar" + "\n"  
             self.ser.write(mensaje.encode())
             print(f"Mensaje enviado: {mensaje}")
-            time.sleep(0.5) # espero por las dudas
+            time.sleep(0.2) # espero por las dudas
             
             if self.ser.in_waiting > 0:
                 respuesta = self.ser.readline().decode().strip()
