@@ -9,7 +9,7 @@ int blinkDelay = 333;  // 1 segundo por defecto
 bool isConectado = false;
 byte delay_led = 200;
 byte p = 0, s = 0;
-
+String mensaje_movimientos = "";
 
 // CONFIGURACION DE LOS STRUCTS DE LOS SERVOS Y MOTORES
 #define MAX_SERVOS 6
@@ -91,19 +91,20 @@ void setear_movimientos_cobot(String mensaje, bool condicion_loop){
       if (m < cantidad_movimientos - 1){
       mensaje = mensaje.substring(index_movimiento+1);
       }
+
       /*
-      Serial.print(movimientos[0].eslabones[0].pasos);
+      Serial.print(movimientos[m].eslabones[0].pasos);
       Serial.print(" ");
-      Serial.print(movimientos[0].eslabones[1].pasos);
+      Serial.print(movimientos[m].eslabones[1].pasos);
       Serial.print(" ");
-      Serial.print(movimientos[0].eslabones[2].pasos);
+      Serial.print(movimientos[m].eslabones[2].pasos);
       Serial.print(" ");
-      Serial.print(movimientos[0].eslabones[0].direccion);
+      Serial.print(movimientos[m].eslabones[0].direccion);
       Serial.print(" ");
-      Serial.print(movimientos[0].eslabones[1].direccion);
+      Serial.print(movimientos[m].eslabones[1].direccion);
       Serial.print(" ");
-      Serial.println(movimientos[0].eslabones[2].direccion);
-      */
+      Serial.println(movimientos[m].eslabones[2].direccion);*/
+
     }
   }
 }
@@ -267,8 +268,15 @@ void esperando_seteo() {
   }
 }
 
-void realizar_movimientos(){
-  Serial.println("Realizando movimientos");
+void realizar_movimientos(byte m){
+  digitalWrite(motores[0].direccion,movimientos[m].eslabones[0].direccion);
+
+  for (int pasos = 0; pasos < movimientos[m].eslabones[0].pasos; pasos ++){
+  digitalWrite(motores[0].pasos,HIGH);
+  delayMicroseconds(1000);
+  digitalWrite(motores[0].pasos,LOW);
+  delayMicroseconds(1000);
+}
 }
 ////////////////////////////
 // FIN DEL BARDO
@@ -305,6 +313,7 @@ void loop()
     } 
 
     else if (mensaje.startsWith("Set_mov")){
+      mensaje_movimientos = "";
       /*
       El mensaje viene del tipo : Set_mov_XXX donde XXX es el número 
       de movimientos a realizar.*/
@@ -312,8 +321,6 @@ void loop()
       cantidad_movimientos = (byte)mensaje.substring(7,mensaje.length()).toInt();
       Serial.println("Set_mov"+String(cantidad_movimientos));
       espera_correcta_recepcion(); //espero hasta OK
-
-      String mensaje_movimientos = "";
 
       while (true) {
         digitalWrite(13,HIGH);
@@ -330,18 +337,23 @@ void loop()
           if (mensaje_parcial.startsWith("fin"))  {
             break; // Salir del bucle si se recibe "fin_mov"  
           } 
-
           else if (mensaje_parcial.length() > 0) {
             mensaje_movimientos += mensaje_parcial;
-            Serial.println(mensaje_movimientos);
           }
         }
       }
+
     }
 
     else if (mensaje.startsWith("Realizar movimientos")){
+      Serial.println(cantidad_movimientos);
       for (byte n_mov = 0; n_mov < cantidad_movimientos; n_mov++){
-          realizar_movimientos();
+          //realizar_movimientos(n_mov);
+          digitalWrite(11,HIGH);
+          delayMicroseconds(1000);
+          digitalWrite(13,HIGH);
+          delayMicroseconds(1000);
+          digitalWrite(13,LOW);
       }
       Serial.println("Movimientos finalizados");
     }
@@ -357,5 +369,6 @@ void loop()
   delay(delay_led);
   digitalWrite(ledPin,LOW);
   delay(delay_led);
+        
 
 }

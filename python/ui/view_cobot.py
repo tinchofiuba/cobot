@@ -245,7 +245,17 @@ class view(Ui_Dialog, QDialog):
         if exito:
             QMessageBox.information(self, "Éxito", "Eslavón actualizado correctamente.")
         else:
-            QMessageBox.warning(self, "Error", "No se pudo actualizar el eslavón. Verifique los datos ingresados.")       
+            QMessageBox.warning(self, "Error", "No se pudo actualizar el eslavón. Verifique los datos ingresados.")    
+            
+    def estado_iniciar_movimiento(self, exito):
+        if exito:
+            self.pb_iniciar_movimiento.setEnabled(True)
+            self.pb_iniciar_movimiento.setStyleSheet("background-color: #99FF99;")
+        else:
+            QMessageBox.warning(self, "Error",)
+            self.pb_iniciar_movimiento.setEnabled(False)
+            self.pb_iniciar_movimiento.setStyleSheet("background-color: #c0392b;")
+               
     
     def funcionalidad_signals(self):
         self.model.conexion_signal.connect(self.estado_conexion)
@@ -254,7 +264,8 @@ class view(Ui_Dialog, QDialog):
         self.model.cobot_guardado_signal.connect(self.mostrar_confirmacion_guardado_cobot)
         self.model.cobot_cargado_signal.connect(self.confirmacion_cargado_cobot)
         self.model.cobot_seteado_signal.connect(self.estado_seteado_cobot)
-        
+        self.model.estado_iniciar_movimiento_signal.connect(self.estado_iniciar_movimiento)
+
     def confirmacion_cargado_cobot(self, exito : bool):
         if exito:
             self.poblar_widgets("init")
@@ -403,6 +414,7 @@ class view(Ui_Dialog, QDialog):
         self.pb_guardar_cobot.clicked.connect(self.guardar_cobot)
         self.pb_gestionar_cobot.clicked.connect(self.gestionar_cobot)
         self.pb_seleccion_eje.clicked.connect(self.actualizar_valor_eje)
+        self.pb_iniciar_movimiento.clicked.connect(self.model.iniciar_movimiento)
         
     def funcionalidad_hs(self):
         self.hs_numero_DOF.valueChanged.connect(lambda : self.actualizar_hs(self.hs_numero_DOF, self.l_valor_numero_DOF))

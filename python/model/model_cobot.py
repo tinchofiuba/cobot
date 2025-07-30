@@ -46,6 +46,7 @@ class ModelCobot(QObject):
     conexion_signal = pyqtSignal(bool)  
     eslavon_guardado_signal = pyqtSignal(bool)  
     actualizar_le_direccion_y_enable_signal = pyqtSignal(str, str)  
+    estado_iniciar_movimiento_signal = pyqtSignal(bool)
     nombres_motores = [eslavon.get("nombre", f"Eslavon {num}") for num, eslavon in json_ultimo_cobot.get("DOF", {}).items()]
     
     def __init__(self, parent = None):
@@ -301,12 +302,19 @@ class ModelCobot(QObject):
                     self.ser.write(mensaje_movimiento.encode())
                     time.sleep(0.2)  # espero por las dudas
                     
-                print("saliendo del while")
-                self.ser.write("fin_mov\n".encode())
+                self.ser.write("fin\n".encode())
+                
+            self.estado_iniciar_movimiento_signal.emit(True)
                 
         except serial.SerialException as e:
             print(f"Error al enviar órdenes al Arduino: {e}")
             return
+        
+    def iniciar_movimiento(self):
+        self.ser.write("Realizar movimientos\n".encode())
+        time.sleep(0.2)  # espero por las dudas
+        print("Enviando mensaje de inicio de movimientos al Arduino.")
+        print("Realizar movimientos\n")
         
     def iniciar_detener_conexion(self):
         if self.conectado == False:
