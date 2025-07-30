@@ -241,49 +241,68 @@ class ModelCobot(QObject):
         except:
             print("Error al obtener el valor del selector DOF.")
             self.eslavon_guardado_signal.emit(False)
+    
+    def espera_correcta_recepcion(self, mensaje: str, OK = bool):
+        '''
+        Solo tiene sentido bool cuando el mje debe ser parseado por el arduino, sino False
+        '''
+        if OK:
+            while True:
+                mensaje_recibido = self.ser.readline().decode().strip()
+                print(f"Mensaje recibido del Arduino: {mensaje_recibido}")
+                if mensaje_recibido == mensaje:
+                    print("Mensaje de movimiento recibido correctamente del Arduino.")
+                    self.ser.write("OK\n".encode())  
+                    time.sleep(0.2)  # espero por las dudas
+                    break
+        else:
+            while True:
+                mensaje_recibido = self.ser.readline().decode().strip()
+                print(f"Mensaje recibido del Arduino: {mensaje_recibido}")
+                if mensaje_recibido == mensaje:
+                    print("Mensaje de movimiento recibido correctamente del Arduino.")
+                    break
             
     def codificar_orden_de_movimiento(self, lista_mov: list):
-        
-        movimiento_codificado = []
-        
-        # armo un dict que relaciona los nobmres con los numeros de los eslavones
-        indice_eslavon = {eslavon.get("nombre", ""): idx for idx, eslavon in self.json_ultimo_cobot.get("DOF", {}).items()}
-        
+        movimiento_codificado = ""
+        self.lista_mov_volatil = lista_mov.copy()  
+        print()
         for movimiento in lista_mov:
-            print(movimiento)
-            
-            movimiento_spliteado = movimiento.split("-")
-            tipo_movimiento = movimiento_spliteado[0].split(" ")[0]  # Girar
-            codificacion_movimiento = tipo_movimiento[0]
-            
-            if codificacion_movimiento == "G":
-            
-                eslavon = movimiento_spliteado[0].split(" ")[1]  # base
-                index_eslavon = indice_eslavon.get(eslavon, None)
-                
-                codificacion_movimiento += index_eslavon #genero G1 G2 .. Gn
-                vector_parseado = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",") # queda del tipo ["n_pasos","d_bobina","1/0"]
+
+            if movimiento[0][0] == "M": #solamente si la orden es del timpo Mover_a (por ahora)
+                movimiento_spliteado = movimiento.split("-")
+                vector_parseado = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",")  
                 delay = movimiento_spliteado[2].replace("d", "")
-                #En este caso particular lo que sale es G_xx_yy_zz_delay
-                movimiento_codificado.append(f"{codificacion_movimiento}_{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}")
-                
-            elif codificacion_movimiento == "M":
-                vector_parseado = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",")  # 
-                delay = movimiento_spliteado[2].replace("d", "")
-                movimiento_codificado.append(f"{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay}")
-                print(f"movimiento codificado: {movimiento_codificado}")
-        
-        #aca junta y lo deja del tipo G_xx1_yy1_zz1_delay1;G_xx2_yy2_zz2_delay2;...
-        return ";".join(movimiento_codificado) + ";"
+                movimiento_parseado = f"{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay};"
+                if len(movimiento_codificado + movimiento_parseado) > 55:
+                    return movimiento_codificado, self.lista_mov_volatil
+                else:
+                    movimiento_codificado += movimiento_parseado
+                    self.lista_mov_volatil.remove(movimiento)
+                    
+        if movimiento_codificado:
+            return movimiento_codificado, self.lista_mov_volatil
 
     def enviar_ordenes(self,mensaje: list, condicion_loop: bool):
         try:
             if condicion_loop == False:
-                mensaje = f"Mover_Nm{len(mensaje)}_" + self.codificar_orden_de_movimiento(mensaje)
-            else:
-                mensaje =  f"Mover_Nm{len(mensaje)-2}_bl_"+ self.codificar_orden_de_movimiento(mensaje) + "_el"
-                
-            print(f"Enviando mensaje al Arduino: {mensaje}")
+                set_cantindad_mov = f"Set_mov{len(mensaje)}" 
+                print(set_cantindad_mov)
+                self.ser.write(set_cantindad_mov.encode())
+                time.sleep(0.5)  # espero por las dudas
+                self.espera_correcta_recepcion(set_cantindad_mov, True)
+
+                while (len(mensaje) > 0):
+                    #codifico el mensaje siempre que el largo sea menor a 55 bytes --> para un arduino Nano
+                    mensaje_movimiento, mensaje = self.codificar_orden_de_movimiento(mensaje)
+                    
+                    mensaje_movimiento += "\n"
+                    print(f"Enviando mensaje de movimiento: {mensaje_movimiento}")
+                    self.ser.write(mensaje_movimiento.encode())
+                    time.sleep(0.2)  # espero por las dudas
+                    
+                print("saliendo del while")
+                self.ser.write("fin_mov\n".encode())
                 
         except serial.SerialException as e:
             print(f"Error al enviar órdenes al Arduino: {e}")
@@ -299,7 +318,7 @@ class ModelCobot(QObject):
                 mensaje = "iniciar" + "\n"  
                 self.ser.write(mensaje.encode())
                 print(f"Mensaje enviado: {mensaje}")
-                time.sleep(0.5) # espero por las dudas
+                time.sleep(1) # espero por las dudas
 
                 if self.ser.in_waiting > 0:
                     respuesta = self.ser.readline().decode().strip()

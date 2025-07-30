@@ -191,7 +191,8 @@ class view(Ui_Dialog, QDialog):
         self.pb_conectar_controlador.setStyleSheet("background-color: #99FF99;")
         self.l_estado_de_conexion.setStyleSheet("color: #c0392b;")
         self.pb_setear_cobot.setEnabled(False)
-        
+        self.pb_enviar_ordenes.setEnabled(False)
+
     def estado_conexion(self, conectado):
         if conectado:
             self.l_estado_de_conexion.setText("Controlador conectado")
@@ -208,12 +209,16 @@ class view(Ui_Dialog, QDialog):
             
     def estado_seteado_cobot(self, seteado):
         if seteado:
-            self.l_seteo_cobot.setText("Cobot seteado !.")
+            self.l_seteo_cobot.setText("Cobot seteado !")
             self.l_seteo_cobot.setStyleSheet("color: #27ae60;")
+            self.pb_enviar_ordenes.setEnabled(True)
+            self.pb_enviar_ordenes.setStyleSheet("background-color: #99FF99;")
 
         else:
             self.l_seteo_cobot.setText("Error al setear el Cobot.")
             self.l_seteo_cobot.setStyleSheet("color: #c0392b;") 
+            self.pb_enviar_ordenes.setEnabled(False)
+            self.pb_enviar_ordenes.setStyleSheet("background-color: #c0392b;")
     
     def actualizar_pin_enable_y_direccion(self, direccion, enable):
         print(f"Actualizar dirección: {direccion}, Enable: {enable}")

@@ -7,6 +7,7 @@ int bauds = 9600;
 int ledPin = 13;
 int blinkDelay = 333;  // 1 segundo por defecto
 bool isConectado = false;
+byte delay_led = 200;
 byte p = 0, s = 0;
 
 
@@ -57,7 +58,7 @@ void asignar_movimiento(String mensaje, byte m) {
     for (byte loc_p = 0; loc_p < p; loc_p++){
       byte index = mensaje.indexOf('_');
       int pasos_motor = mensaje.substring(0, index).toInt();
-      Serial.println(abs(pasos_motor));
+      
       movimientos[m].eslabones[loc_p].pasos = abs(pasos_motor);
       movimientos[m].eslabones[loc_p].direccion = (pasos_motor > 0) ? 1 : 0;
       movimientos[m].delay_bobina = 1000; //super hardcodeado
@@ -66,23 +67,31 @@ void asignar_movimiento(String mensaje, byte m) {
     movimientos[m].delay_total = mensaje.toInt();
 }
 
-void mover_cobot(String mensaje, bool condicion_loop){ 
+void espera_correcta_recepcion() {
+  while (Serial.available() == 0){
+    digitalWrite(13,HIGH);
+    delay(60);
+    digitalWrite(13,LOW);
+    delay(60);
+    if (Serial.available() > 0){
+      if (Serial.readStringUntil('\n') == "OK"){
+        break;
+      }
+    }     
+  } 
+}
+
+void setear_movimientos_cobot(String mensaje, bool condicion_loop){ 
 
   if (condicion_loop == false){
 
-    // si quiero mover un motor una determinada cantidad de pasos (es algo provisorio)
-
-    if (mensaje.startsWith("G_")){
-      mensaje = mensaje.substring(1); //le remuevo "G" a "G1", "G2" ... "Gn"
-    }
-
     for (byte m = 0; m < cantidad_movimientos; m++){
-      byte index_movimiento = mensaje.indexOf(';'); //busco el separador ";" que separa movimientos
+      byte index_movimiento = mensaje.indexOf(';'); 
       asignar_movimiento(mensaje.substring(0, index_movimiento), m);
       if (m < cantidad_movimientos - 1){
       mensaje = mensaje.substring(index_movimiento+1);
       }
-
+      /*
       Serial.print(movimientos[0].eslabones[0].pasos);
       Serial.print(" ");
       Serial.print(movimientos[0].eslabones[1].pasos);
@@ -94,25 +103,7 @@ void mover_cobot(String mensaje, bool condicion_loop){
       Serial.print(movimientos[0].eslabones[1].direccion);
       Serial.print(" ");
       Serial.println(movimientos[0].eslabones[2].direccion);
-
-    }
-
-    digitalWrite(motores[0].direccion, movimientos[0].eslabones[0].direccion);
-    digitalWrite(motores[0].enable, LOW);
-    
-    for (int i = 0; i < movimientos[0].eslabones[0].pasos ; i++){  
-
-      digitalWrite(motores[0].pasos, HIGH);
-      delayMicroseconds(movimientos[0].delay_bobina); 
-      digitalWrite(motores[0].pasos, LOW); 
-      delayMicroseconds(movimientos[0].delay_bobina); 
-
-      }
-
-    if (movimientos[0].delay_total != 0)
-
-    {
-      delay(movimientos[0].delay_total);
+      */
     }
   }
 }
@@ -266,17 +257,8 @@ void esperando_seteo() {
       else if (mensaje.startsWith("p_") || mensaje.startsWith("s_")) {
 
         Serial.println(setear_cobot(mensaje)); //reenvío a python el mje para ver si está bien
+        espera_correcta_recepcion(); //espero hasta recibir OK
 
-        while (Serial.available() == 0){
-          digitalWrite(ledPin, HIGH);  
-          if (Serial.available() > 0){
-
-            if (Serial.readStringUntil('\n') == "OK"){
-              break;
-
-            }
-          }     
-        } 
       }
       else if (mensaje == "fin_seteo"){
         break; //finaliza el seteado del cobot
@@ -285,6 +267,9 @@ void esperando_seteo() {
   }
 }
 
+void realizar_movimientos(){
+  Serial.println("Realizando movimientos");
+}
 ////////////////////////////
 // FIN DEL BARDO
 ////////////////////////////
@@ -319,25 +304,46 @@ void loop()
       }
     } 
 
-    else if (mensaje.startsWith("Mover_")){
+    else if (mensaje.startsWith("Set_mov")){
+      /*
+      El mensaje viene del tipo : Set_mov_XXX donde XXX es el número 
+      de movimientos a realizar.*/
 
-      mensaje = mensaje.substring(6); //empiezo luego de "Mover_"
+      cantidad_movimientos = (byte)mensaje.substring(7,mensaje.length()).toInt();
+      Serial.println("Set_mov"+String(cantidad_movimientos));
+      espera_correcta_recepcion(); //espero hasta OK
 
-      // busco el 1ero _ así separo Nm del número de movimientos y de _ de NMx_ 
-      byte index_numero_movimientos = mensaje.indexOf('_');
-      cantidad_movimientos = (byte)mensaje.substring(2, index_numero_movimientos).toInt(); //me quedo con la cantidad de movimientos
-      mensaje = mensaje.substring(index_numero_movimientos+1); //remuevo la cantidad de movimientos, limpiando el mensaje
+      String mensaje_movimientos = "";
 
-      if (mensaje.startsWith("bl_")){ // solo si hay un beginloop
-        mensaje = mensaje.substring(3).substring(3, mensaje.length() - 3);
-        mover_cobot(mensaje, true);
+      while (true) {
+        digitalWrite(13,HIGH);
+        delay(20);
+        digitalWrite(13,LOW);
+        delay(20);
+
+        if (Serial.available() > 0) {
+
+          String mensaje_parcial = Serial.readStringUntil('\n');
+          mensaje_parcial.trim(); 
+          Serial.println(mensaje_parcial);
+
+          if (mensaje_parcial.startsWith("fin"))  {
+            break; // Salir del bucle si se recibe "fin_mov"  
+          } 
+
+          else if (mensaje_parcial.length() > 0) {
+            mensaje_movimientos += mensaje_parcial;
+            Serial.println(mensaje_movimientos);
+          }
+        }
       }
+    }
 
-      else{ // en caso de no haber loop
-        mover_cobot(mensaje, false);
+    else if (mensaje.startsWith("Realizar movimientos")){
+      for (byte n_mov = 0; n_mov < cantidad_movimientos; n_mov++){
+          realizar_movimientos();
       }
-
-      Serial.println("movimiento/s finalizado/s");
+      Serial.println("Movimientos finalizados");
     }
     
     else if (mensaje == "finalizar") {
@@ -347,9 +353,9 @@ void loop()
     }
   }
 
-  //digitalWrite(ledPin,HIGH);
-  //delay(20);
-  //digitalWrite(ledPin,LOW);
-  //delay(20);
+  digitalWrite(ledPin,HIGH);
+  delay(delay_led);
+  digitalWrite(ledPin,LOW);
+  delay(delay_led);
 
 }

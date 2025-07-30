@@ -24,7 +24,7 @@ class Ui_Dialog(object):
         self.groupBox.setTitle("")
         self.groupBox.setObjectName("groupBox")
         self.layoutWidget = QtWidgets.QWidget(self.groupBox)
-        self.layoutWidget.setGeometry(QtCore.QRect(12, 13, 194, 175))
+        self.layoutWidget.setGeometry(QtCore.QRect(12, 13, 194, 161))
         self.layoutWidget.setObjectName("layoutWidget")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.layoutWidget)
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
