@@ -315,38 +315,46 @@ void loop()
       }
     } 
 
-    else if (mensaje.startsWith("Set_mov")){
-      mensaje_movimientos = "";
-      /*
-      El mensaje viene del tipo : Set_mov_XXX donde XXX es el número 
-      de movimientos a realizar.*/
+    else if (mensaje.startsWith("Set_mov")) {
+        mensaje_movimientos = "";
 
-      cantidad_movimientos = (byte)mensaje.substring(7,mensaje.length()).toInt();
-      Serial.println("Set_mov"+String(cantidad_movimientos));
-      espera_correcta_recepcion(); //espero hasta OK
-
-      while (true) {
         /*
-        digitalWrite(13,HIGH);
-        delay(20);
-        digitalWrite(13,LOW);
-        delay(20);*/
+        El mensaje viene del tipo: Set_mov_XXX_YYY
+        donde XXX es el valor de delay_bobina y YYY es el número de movimientos a realizar.
+        */
 
-        if (Serial.available() > 0) {
+        // Parsear delay_bobina y cantidad_movimientos
+        int primer_guion = mensaje.indexOf('_', 7); // Encuentra el primer guion bajo después de "Set_mov"
+        int segundo_guion = mensaje.indexOf('_', primer_guion + 1); // Encuentra el segundo guion bajo
 
-          String mensaje_parcial = Serial.readStringUntil('\n');
-          mensaje_parcial.trim(); 
-          Serial.println(mensaje_parcial);
-
-          if (mensaje_parcial.startsWith("fin"))  {
-            break; // Salir del bucle si se recibe "fin_mov"  
-          } 
-          else if (mensaje_parcial.length() > 0) {
-            mensaje_movimientos += mensaje_parcial;
-          }
+        if (primer_guion != -1 && segundo_guion != -1) {
+            delay_bobina = mensaje.substring(7, primer_guion).toInt(); // Extrae el valor de delay_bobina
+            cantidad_movimientos = mensaje.substring(primer_guion + 1, segundo_guion).toInt(); // Extrae cantidad_movimientos
+        } else {
+            Serial.println("Error: Formato de mensaje Set_mov incorrecto.");
+            return; // Salir si el formato no es válido
         }
-      }
-    setear_movimientos_cobot(mensaje_movimientos, false);
+
+        Serial.println("Set_mov recibido:");
+        Serial.println("Delay bobina: " + String(delay_bobina));
+        Serial.println("Cantidad de movimientos: " + String(cantidad_movimientos));
+        espera_correcta_recepcion(); // Espero hasta OK
+
+        while (true) {
+            if (Serial.available() > 0) {
+                String mensaje_parcial = Serial.readStringUntil('\n');
+                mensaje_parcial.trim();
+                Serial.println(mensaje_parcial);
+
+                if (mensaje_parcial.startsWith("fin")) {
+                    break; // Salir del bucle si se recibe "fin_mov"
+                } else if (mensaje_parcial.length() > 0) {
+                    mensaje_movimientos += mensaje_parcial;
+                }
+            }
+        }
+
+        setear_movimientos_cobot(mensaje_movimientos, false);
     }
 
     else if (mensaje.startsWith("Realizar movimientos")){
@@ -369,9 +377,9 @@ void loop()
           digitalWrite(motores[0].direccion,movimientos[n_mov].eslabones[0].direccion);
           for (int pasos = 0; pasos < movimientos[n_mov].eslabones[0].pasos; pasos++){
             digitalWrite(motores[0].pasos,HIGH);
-            delayMicroseconds(1000);
+            delayMicroseconds(delay_bobina);
             digitalWrite(motores[0].pasos,LOW);
-            delayMicroseconds(1000);
+            delayMicroseconds(delay_bobina);
           }
           if (movimientos[n_mov].delay_total > 0){
             delay(movimientos[n_mov].delay_total);

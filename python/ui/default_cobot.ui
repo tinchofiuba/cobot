@@ -31,13 +31,13 @@
       <x>10</x>
       <y>30</y>
       <width>211</width>
-      <height>180</height>
+      <height>190</height>
      </rect>
     </property>
     <property name="maximumSize">
      <size>
       <width>16777215</width>
-      <height>180</height>
+      <height>190</height>
      </size>
     </property>
     <property name="title">
@@ -49,7 +49,7 @@
        <x>12</x>
        <y>13</y>
        <width>194</width>
-       <height>161</height>
+       <height>175</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -118,7 +118,7 @@
           <property name="maximumSize">
            <size>
             <width>190</width>
-            <height>88</height>
+            <height>50</height>
            </size>
           </property>
          </widget>
@@ -136,7 +136,7 @@
            </size>
           </property>
           <property name="text">
-           <string>Nº de eslabones</string>
+           <string>Nº de eslavones</string>
           </property>
          </widget>
         </item>
@@ -160,7 +160,7 @@
            </font>
           </property>
           <property name="text">
-           <string>RPM max</string>
+           <string>RPM </string>
           </property>
          </widget>
         </item>
@@ -221,7 +221,7 @@
            </size>
           </property>
           <property name="text">
-           <string>1</string>
+           <string>200</string>
           </property>
          </widget>
         </item>
@@ -234,9 +234,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>210</y>
+      <y>220</y>
       <width>211</width>
-      <height>251</height>
+      <height>241</height>
      </rect>
     </property>
     <property name="maximumSize">
@@ -246,7 +246,7 @@
      </size>
     </property>
     <property name="title">
-     <string>Configuraciones eslabones</string>
+     <string>Configuraciones eslavones</string>
     </property>
     <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
@@ -307,7 +307,7 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLineEdit" name="le_largo_eslabon">
+       <widget class="QLineEdit" name="le_largo_eslavon">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>6</horstretch>
@@ -345,7 +345,7 @@
        </widget>
       </item>
       <item row="1" column="2">
-       <widget class="QLineEdit" name="le_posicion_absoluta_eslabon">
+       <widget class="QLineEdit" name="le_posicion_absoluta_eslavon">
         <property name="maximumSize">
          <size>
           <width>100</width>
@@ -468,7 +468,7 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLineEdit" name="le_nombre_eslabon">
+         <widget class="QLineEdit" name="le_nombre_eslavon">
           <property name="maximumSize">
            <size>
             <width>100</width>
@@ -557,7 +557,7 @@
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QLineEdit" name="le_pin_enable_eslabon">
+         <widget class="QLineEdit" name="le_pin_enable_eslavon">
           <property name="maximumSize">
            <size>
             <width>30</width>
@@ -570,7 +570,7 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLineEdit" name="le_pin_pasos_eslabon">
+         <widget class="QLineEdit" name="le_pin_pasos_eslavon">
           <property name="maximumSize">
            <size>
             <width>30</width>
@@ -583,7 +583,7 @@
          </widget>
         </item>
         <item row="1" column="2">
-         <widget class="QLineEdit" name="le_pin_direccion_eslabon">
+         <widget class="QLineEdit" name="le_pin_direccion_eslavon">
           <property name="maximumSize">
            <size>
             <width>30</width>
@@ -629,7 +629,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_7">
       <item>
-       <widget class="QPushButton" name="pb_guardar_eslabon">
+       <widget class="QPushButton" name="pb_guardar_eslavon">
         <property name="text">
          <string>Guardar eslavón</string>
         </property>

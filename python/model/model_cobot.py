@@ -284,10 +284,11 @@ class ModelCobot(QObject):
         if movimiento_codificado:
             return movimiento_codificado, self.lista_mov_volatil
 
-    def enviar_ordenes(self,mensaje: list, condicion_loop: bool):
+    def enviar_ordenes(self,mensaje: list, condicion_loop: bool, RPM: str):
         try:
             if condicion_loop == False:
-                set_cantindad_mov = f"Set_mov{len(mensaje)}" 
+                delay_microseconds = round((60 * 10**6 / (float(RPM)) * 200),0)
+                set_cantindad_mov = f"Set_mov_{delay_microseconds}_{len(mensaje)}" 
                 print(set_cantindad_mov)
                 self.ser.write(set_cantindad_mov.encode())
                 time.sleep(0.5)  # espero por las dudas

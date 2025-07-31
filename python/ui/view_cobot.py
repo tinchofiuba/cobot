@@ -352,7 +352,7 @@ class view(Ui_Dialog, QDialog):
             
     def enviar_ordenes(self):
         if self.lista_movimientos:
-            self.model.enviar_ordenes(self.lista_movimientos, self.condicion_loop)
+            self.model.enviar_ordenes(self.lista_movimientos, self.condicion_loop,self.le_RPM_cobot.text())
         else:
             QMessageBox.warning(self, "Error", "No hay movimientos para iniciar la rutina.")
             
