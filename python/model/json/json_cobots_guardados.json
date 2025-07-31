@@ -34,7 +34,12 @@
                     "pin": 13,
                     "direccion": 11,
                     "enable": 12
-                }
+                },
+                "posicion": [
+                    0.0,
+                    0.0,
+                    0.05
+                ]
             },
             "2": {
                 "nombre": "y",
@@ -44,7 +49,12 @@
                     "pin": 3,
                     "direccion": 4,
                     "enable": 2
-                }
+                },
+                "posicion": [
+                    0.0,
+                    0.0,
+                    0.05
+                ]
             },
             "3": {
                 "nombre": "z",
@@ -54,12 +64,19 @@
                     "pin": 6,
                     "direccion": 7,
                     "enable": 5
-                }
+                },
+                "posicion": [
+                    0.0,
+                    0.0,
+                    0.15
+                ]
             }
         },
         "movimientos": [
             "Mover_a:(-100,-100,-100):d1000",
-            "Mover_a:(50,50,50):d0"
+            "Mover_a:(60,60,60):d500",
+            "Mover_a:(-20,-20,-20):d500",
+            "Mover_a:(100,100,100):d0"
         ]
     }
 }

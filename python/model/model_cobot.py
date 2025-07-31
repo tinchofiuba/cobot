@@ -1,7 +1,7 @@
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
-from python.model.cinematica_inversa import CinematicaInversa  
+#from python.model.cinematica_inversa import CinematicaInversa  
 
 import json
 import os
@@ -44,14 +44,15 @@ class ModelCobot(QObject):
     cobot_borrado_signal = pyqtSignal(bool)  
     cobot_cargado_signal = pyqtSignal(bool)
     conexion_signal = pyqtSignal(bool)  
-    eslavon_guardado_signal = pyqtSignal(bool)  
+    eslabon_guardado_signal = pyqtSignal(bool)  
     actualizar_le_direccion_y_enable_signal = pyqtSignal(str, str)  
     estado_iniciar_movimiento_signal = pyqtSignal(bool)
-    nombres_motores = [eslavon.get("nombre", f"Eslavon {num}") for num, eslavon in json_ultimo_cobot.get("DOF", {}).items()]
+    nombres_motores = [eslabon.get("nombre", f"eslabon {num}") for num, eslabon in json_ultimo_cobot.get("DOF", {}).items()]
     
     def __init__(self, parent = None):
         super().__init__(parent)
         self.conectado = False
+        #self.CI = CinematicaInversa()
         
     def from_json_to_arduino(self, json_cobot):
         json_plano =""
@@ -78,17 +79,17 @@ class ModelCobot(QObject):
                     json_cobot = json.load(file)
                     json_plano = self.from_json_to_arduino(json_cobot["DOF"]) 
                     json_plano_spliteado = [item for item in json_plano.split(";") if item != ""] 
-                    for eslavon in json_plano_spliteado:
-                        print(f"----->   Enviando al Arduino: {eslavon}")
-                        self.ser.write((eslavon + "\n").encode())
+                    for eslabon in json_plano_spliteado:
+                        print(f"----->   Enviando al Arduino: {eslabon}")
+                        self.ser.write((eslabon + "\n").encode())
                         time.sleep(0.2)  
 
                         while True:
                             respuesta = self.ser.readline().decode().strip()
                             print(f"Respuesta del Arduino: {respuesta}  <-----")
-                            if respuesta == eslavon:
+                            if respuesta == eslabon:
                                 print("")
-                                print(f"Arduino ha recibido correctamente: {eslavon}")
+                                print(f"Arduino ha recibido correctamente: {eslabon}")
                                 self.ser.write(b"OK\n") 
                                 print("")
                                 break
@@ -103,22 +104,22 @@ class ModelCobot(QObject):
         except Exception as e:
             print(f"Error al enviar el JSON al Arduino: {e}")
             
-    def actualizar_eslavon_cambio_motor(self, numero_de_eslavon):
-        print(f"Actualizando eslavón {numero_de_eslavon} para mostrar los pines de dirección y enable del motor.")
-        if numero_de_eslavon in self.json_ultimo_cobot.get("DOF", {}):
-            datos_eslavon = self.json_ultimo_cobot["DOF"][numero_de_eslavon].get("motor", {})
-            valor_pin_direccion = datos_eslavon.get("direccion", "N/A")
+    def actualizar_eslabon_cambio_motor(self, numero_de_eslabon):
+        print(f"Actualizando eslavón {numero_de_eslabon} para mostrar los pines de dirección y enable del motor.")
+        if numero_de_eslabon in self.json_ultimo_cobot.get("DOF", {}):
+            datos_eslabon = self.json_ultimo_cobot["DOF"][numero_de_eslabon].get("motor", {})
+            valor_pin_direccion = datos_eslabon.get("direccion", "N/A")
             print(f"Valor de pin dirección: {valor_pin_direccion}")
-            valor_pin_enable = datos_eslavon.get("enable", "N/A")
+            valor_pin_enable = datos_eslabon.get("enable", "N/A")
             print(f"Valor de pin enable: {valor_pin_enable}")
             self.actualizar_le_direccion_y_enable_signal.emit(str(valor_pin_direccion), str(valor_pin_enable))
         else:
-            print(f"El eslavón {numero_de_eslavon} no existe en el JSON.")
+            print(f"El eslavón {numero_de_eslabon} no existe en el JSON.")
     
     def cargar_cobot(self, nombre_cobot: str):
         if nombre_cobot in self.json_cobots_guardados:
             self.nombre_cobot = nombre_cobot
-            self.nombres_motores = [eslavon.get("nombre", f"Eslavon {num}") for num, eslavon in self.json_ultimo_cobot.get("DOF", {}).items()]
+            self.nombres_motores = [eslabon.get("nombre", f"eslabon {num}") for num, eslabon in self.json_ultimo_cobot.get("DOF", {}).items()]
             self.json_ultimo_cobot = self.json_cobots_guardados[nombre_cobot]
             with open(path_json, "w") as file:
                 json.dump(self.json_ultimo_cobot, file, indent=4)
@@ -169,8 +170,8 @@ class ModelCobot(QObject):
             for nombre_cobot, datos_cobot in self.json_cobots_guardados.items():
                 descripcion = datos_cobot.get("descripcion", "")
                 num_dof = len(datos_cobot.get("DOF", {}))
-                num_servos = sum(1 for eslavon in datos_cobot.get("DOF", {}).values() if eslavon.get("motor", {}).get("tipo") == "Servo motor")
-                num_paso_a_paso = sum(1 for eslavon in datos_cobot.get("DOF", {}).values() if eslavon.get("motor", {}).get("tipo") == "Paso a paso")
+                num_servos = sum(1 for eslabon in datos_cobot.get("DOF", {}).values() if eslabon.get("motor", {}).get("tipo") == "Servo motor")
+                num_paso_a_paso = sum(1 for eslabon in datos_cobot.get("DOF", {}).values() if eslabon.get("motor", {}).get("tipo") == "Paso a paso")
                 
                 descripcion = (
                     "Descripción:\n"
@@ -217,7 +218,7 @@ class ModelCobot(QObject):
             print(f"Error al guardar el cobot {self.nombre_cobot}: {e}")
             self.cobot_guardado_signal.emit(False)
             
-    def guardar_eslavon(self,numero_de_DOF : str, numero_de_eslavon : str,datos_eslavon : dict):
+    def guardar_eslabon(self,numero_de_DOF : str, numero_de_eslabon : str,datos_eslabon : dict):
         try:
             
             if len(self.json_ultimo_cobot["DOF"]) > int(numero_de_DOF):
@@ -226,22 +227,22 @@ class ModelCobot(QObject):
                     if int(key) > int(numero_de_DOF):
                         del self.json_ultimo_cobot["DOF"][key]
             
-            if numero_de_eslavon not in self.json_ultimo_cobot.get("DOF", {}):
-                self.json_ultimo_cobot["DOF"][numero_de_eslavon] = datos_eslavon
+            if numero_de_eslabon not in self.json_ultimo_cobot.get("DOF", {}):
+                self.json_ultimo_cobot["DOF"][numero_de_eslabon] = datos_eslabon
 
             else:
-                self.json_ultimo_cobot["DOF"][numero_de_eslavon].update(datos_eslavon)
+                self.json_ultimo_cobot["DOF"][numero_de_eslabon].update(datos_eslabon)
                 
-            self.nombres_motores = [eslavon.get("nombre", f"Eslavon {num}") for num, eslavon in self.json_ultimo_cobot.get("DOF", {}).items()]
+            self.nombres_motores = [eslabon.get("nombre", f"eslabon {num}") for num, eslabon in self.json_ultimo_cobot.get("DOF", {}).items()]
 
             with open("python/model/json/json_cobot.json", "w") as file:
                 json.dump(self.json_ultimo_cobot, file, indent=4)
                 
-            self.eslavon_guardado_signal.emit(True)
+            self.eslabon_guardado_signal.emit(True)
         
         except:
             print("Error al obtener el valor del selector DOF.")
-            self.eslavon_guardado_signal.emit(False)
+            self.eslabon_guardado_signal.emit(False)
     
     def espera_correcta_recepcion(self, mensaje: str, OK = bool):
         '''
