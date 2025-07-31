@@ -192,6 +192,7 @@ class view(Ui_Dialog, QDialog):
         self.l_estado_de_conexion.setStyleSheet("color: #c0392b;")
         self.pb_setear_cobot.setEnabled(False)
         self.pb_enviar_ordenes.setEnabled(False)
+        self.le_RPM_cobot.setEnabled(False)
 
     def estado_conexion(self, conectado):
         if conectado:
@@ -213,12 +214,14 @@ class view(Ui_Dialog, QDialog):
             self.l_seteo_cobot.setStyleSheet("color: #27ae60;")
             self.pb_enviar_ordenes.setEnabled(True)
             self.pb_enviar_ordenes.setStyleSheet("background-color: #99FF99;")
+            self.le_RPM_cobot.setEnabled(True)
 
         else:
             self.l_seteo_cobot.setText("Error al setear el Cobot.")
             self.l_seteo_cobot.setStyleSheet("color: #c0392b;") 
             self.pb_enviar_ordenes.setEnabled(False)
             self.pb_enviar_ordenes.setStyleSheet("background-color: #c0392b;")
+            self.le_RPM_cobot.setEnabled(False)
     
     def actualizar_pin_enable_y_direccion(self, direccion, enable):
         print(f"Actualizar dirección: {direccion}, Enable: {enable}")
@@ -265,6 +268,13 @@ class view(Ui_Dialog, QDialog):
         self.model.cobot_cargado_signal.connect(self.estado_cargado_cobot)
         self.model.cobot_seteado_signal.connect(self.estado_seteado_cobot)
         self.model.estado_iniciar_movimiento_signal.connect(self.estado_iniciar_movimiento)
+        self.model.estado_seteo_velocidad_signal.connect(self.estado_seteo_velocidad)
+        
+    def estado_seteo_velocidad(self, exito):
+        if exito:
+            QMessageBox.information(self, "Éxito", "Velocidad seteada correctamente.")
+        else:
+            QMessageBox.warning(self, "Error", "No se pudo setear la velocidad. Error de input o de conexión.")
 
     def estado_cargado_cobot(self, exito : bool):
         if exito:
@@ -284,11 +294,11 @@ class view(Ui_Dialog, QDialog):
             QMessageBox.warning(self, "Error", "Los campos numéricos deben ser válidos.")
 
         self.pb_guardar_eslabon.setEnabled(todos_llenos and numericos_validos)
-
-        
+    
     def funcionalidad_le(self):
         for le in self.lista_line_edits:
             le.textChanged.connect(self.validar_line_edits)
+        self.le_RPM_cobot.textChanged.connect(lambda: self.model.set_vel(self.le_RPM_cobot.text()))
         
     def habilitar_deshabilitar_guardado(self):
         if all(le.text() for le in self.lista_line_edits):

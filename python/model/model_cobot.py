@@ -47,6 +47,7 @@ class ModelCobot(QObject):
     eslabon_guardado_signal = pyqtSignal(bool)  
     actualizar_le_direccion_y_enable_signal = pyqtSignal(str, str)  
     estado_iniciar_movimiento_signal = pyqtSignal(bool)
+    estado_seteo_velocidad_signal = pyqtSignal(bool)
     nombres_motores = [eslabon.get("nombre", f"eslabon {num}") for num, eslabon in json_ultimo_cobot.get("DOF", {}).items()]
     
     def __init__(self, parent = None):
@@ -284,13 +285,32 @@ class ModelCobot(QObject):
         if movimiento_codificado:
             return movimiento_codificado, self.lista_mov_volatil
 
+    def set_vel(self, RPM: str):
+            try:
+                if RPM != "":
+                    print(f"Seteando velocidad del cobot a {RPM} RPM")
+                    delay_microseconds = round(60 * 10**6 / (float(RPM) * 200))
+                    print(delay_microseconds)
+                    if delay_microseconds > 1500 and delay_microseconds < 200000:
+                        mensaje = f"Set_vel{delay_microseconds}"
+                        self.ser.write(mensaje.encode())
+                        time.sleep(0.2)  # espero por las dudas
+                        print(f"Enviando mensaje de velocidad al Arduino: {mensaje}")
+                        self.espera_correcta_recepcion(mensaje, True)
+                        self.estado_seteo_velocidad_signal.emit(True)
+                    else:
+                        print(f"El valor de RPM no está dentro de los parámetros{RPM} es demasiado alto, da un delay de {delay_microseconds} usegs, debe estar entre 1500 y 200000 microsegundos.")
+                         
+            except serial.SerialException as e:
+                print(f"Error al enviar la velocidad al Arduino: {e}")
+                self.estado_seteo_velocidad_signal.emit(False)
+
     def enviar_ordenes(self,mensaje: list, condicion_loop: bool, RPM: str):
         try:
             if condicion_loop == False:
-                delay_microseconds = round(60 * 10**6 / (float(RPM) * 200))
-                set_cantindad_mov = f"Set_mov{delay_microseconds}_{len(mensaje)}" 
+                set_cantindad_mov = f"Set_mov{len(mensaje)}" 
                 self.ser.write(set_cantindad_mov.encode())
-                time.sleep(0.5)  # espero por las dudas
+                time.sleep(0.2)  # espero por las dudas
                 self.espera_correcta_recepcion(set_cantindad_mov, True)
 
                 while (len(mensaje) > 0):

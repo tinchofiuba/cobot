@@ -6,7 +6,7 @@
 int bauds = 9600;
 int ledPin = 13;
 int blinkDelay = 333;  // 1 segundo por defecto
-int delay_bobina = 2000;
+long delay_bobina = 2000;
 bool isConectado = false;
 byte delay_led = 200;
 byte p = 0, s = 0;
@@ -322,13 +322,8 @@ void loop()
         El mensaje viene del tipo: Set_mov_XXX_YYY
         donde XXX es el valor de delay_bobina y YYY es el número de movimientos a realizar.
         */
-        mensaje = mensaje.substring(7);
-        int index_delay_bobina = mensaje.indexOf('_');
-        delay_bobina = mensaje.substring(0, index_delay_bobina).toInt();
-        cantidad_movimientos = mensaje.substring(index_delay_bobina+1).toInt();
-
-        Serial.println("Set_mov"+String(delay_bobina)+"_"+String(cantidad_movimientos));
-
+        cantidad_movimientos = mensaje.substring(7).toInt();
+        Serial.println("Set_mov"+String(cantidad_movimientos));
         espera_correcta_recepcion(); // Espero hasta OK
 
         while (true) {
@@ -346,6 +341,16 @@ void loop()
         }
 
         setear_movimientos_cobot(mensaje_movimientos, false);
+    }
+
+    else if (mensaje.startsWith("Set_vel")) {
+        /*
+        El mensaje viene del tipo: Set_velXXX
+        donde XXX es el valor de delay_bobina 
+        */
+        delay_bobina = mensaje.substring(7).toInt();
+        Serial.println("Set_vel"+String(delay_bobina));
+        espera_correcta_recepcion(); // Espero hasta OK
     }
 
     else if (mensaje.startsWith("Realizar movimientos")){
