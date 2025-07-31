@@ -270,6 +270,9 @@ void esperando_seteo() {
 
 void realizar_movimientos(byte m){
   digitalWrite(motores[0].direccion,movimientos[m].eslabones[0].direccion);
+  
+  Serial.println(movimientos[m].eslabones[0].direccion);
+  Serial.println(motores[0].direccion);
 
   for (int pasos = 0; pasos < movimientos[m].eslabones[0].pasos; pasos ++){
   digitalWrite(motores[0].pasos,HIGH);
@@ -323,10 +326,11 @@ void loop()
       espera_correcta_recepcion(); //espero hasta OK
 
       while (true) {
+        /*
         digitalWrite(13,HIGH);
         delay(20);
         digitalWrite(13,LOW);
-        delay(20);
+        delay(20);*/
 
         if (Serial.available() > 0) {
 
@@ -342,18 +346,39 @@ void loop()
           }
         }
       }
-
+    setear_movimientos_cobot(mensaje_movimientos, false);
     }
 
     else if (mensaje.startsWith("Realizar movimientos")){
+      /*
+      
       Serial.println(cantidad_movimientos);
-      for (byte n_mov = 0; n_mov < 100; n_mov++){
+      Serial.println(movimientos[0].eslabones[0].direccion);
+      Serial.println(movimientos[0].eslabones[0].pasos);
+      Serial.println(movimientos[0].eslabones[1].direccion);
+      Serial.println(movimientos[0].eslabones[1].pasos);
+      Serial.println(movimientos[1].eslabones[0].direccion);
+      Serial.println(movimientos[1].eslabones[0].pasos);
+      Serial.println(movimientos[1].eslabones[1].direccion);
+      Serial.println(movimientos[1].eslabones[1].pasos);
+      Serial.println(motores[0].direccion);*/
+
+      for (int n_mov = 0; n_mov < cantidad_movimientos; n_mov++){
           //realizar_movimientos(n_mov);
-          digitalWrite(11,HIGH);
-          delayMicroseconds(1000);
-          digitalWrite(13,HIGH);
-          delayMicroseconds(1000);
-          digitalWrite(13,LOW);
+
+          digitalWrite(motores[0].direccion,movimientos[n_mov].eslabones[0].direccion);
+          for (int pasos = 0; pasos < movimientos[n_mov].eslabones[0].pasos; pasos++){
+            digitalWrite(motores[0].pasos,HIGH);
+            delayMicroseconds(1000);
+            digitalWrite(motores[0].pasos,LOW);
+            delayMicroseconds(1000);
+          }
+          if (movimientos[n_mov].delay_total > 0){
+            delay(movimientos[n_mov].delay_total);
+          }
+
+
+          
       }
       Serial.println("Movimientos finalizados");
     }

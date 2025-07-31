@@ -267,11 +267,10 @@ class ModelCobot(QObject):
     def codificar_orden_de_movimiento(self, lista_mov: list):
         movimiento_codificado = ""
         self.lista_mov_volatil = lista_mov.copy()  
-        print()
         for movimiento in lista_mov:
 
             if movimiento[0][0] == "M": #solamente si la orden es del timpo Mover_a (por ahora)
-                movimiento_spliteado = movimiento.split("-")
+                movimiento_spliteado = movimiento.split(":")
                 vector_parseado = movimiento_spliteado[1].replace("(", "").replace(")", "").split(",")  
                 delay = movimiento_spliteado[2].replace("d", "")
                 movimiento_parseado = f"{vector_parseado[0]}_{vector_parseado[1]}_{vector_parseado[2]}_{delay};"

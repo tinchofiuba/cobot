@@ -129,9 +129,9 @@ class DialogMovimiento(Ui_Dialog_Movimiento, QDialog):
             vector = f"({self.le_x.text()},{self.le_y.text()},{self.le_z.text()})"
         if self.le_delay.text() != "":
             delay = f"d{self.le_delay.text()}"
-            self.movimiento = f"{self.pb_seleccion_movimiento.text()}-{vector}-{delay}"
+            self.movimiento = f"{self.pb_seleccion_movimiento.text()}:{vector}:{delay}"
         else:
-            self.movimiento = f"{self.pb_seleccion_movimiento.text()}-{vector}-d0"
+            self.movimiento = f"{self.pb_seleccion_movimiento.text()}:{vector}:d0"
             
         self.movimiento_nuevo_signal.emit(self.movimiento)
         
