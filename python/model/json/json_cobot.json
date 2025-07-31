@@ -1,7 +1,7 @@
 {
     "nombre": "mejoras",
     "descripcion": "prueba nueva",
-    "RPM": 3.0,
+    "RPM": 100.0,
     "DOF": {
         "1": {
             "nombre": "z",

@@ -6,6 +6,7 @@
 int bauds = 9600;
 int ledPin = 13;
 int blinkDelay = 333;  // 1 segundo por defecto
+int delay_bobina = 2000;
 bool isConectado = false;
 byte delay_led = 200;
 byte p = 0, s = 0;
@@ -22,13 +23,13 @@ struct Eslabon {
 
 struct Movimiento {
   Eslabon eslabones[MAX_PAP];
-  int delay_bobina;//esto va a estar hardcodeado, hay que cambiarlo y no tengo ganas
+  //int delay_bobina;//esto va a estar hardcodeado, hay que cambiarlo y no tengo ganas
   int delay_total;
 };
 
 Movimiento movimientos[max_movimientos]; 
 
-byte cantidad_movimientos = 0;
+int cantidad_movimientos = 0;
 
 struct servoConfig {
   String nombre;
@@ -61,7 +62,7 @@ void asignar_movimiento(String mensaje, byte m) {
       
       movimientos[m].eslabones[loc_p].pasos = abs(pasos_motor);
       movimientos[m].eslabones[loc_p].direccion = (pasos_motor > 0) ? 1 : 0;
-      movimientos[m].delay_bobina = 1000; //super hardcodeado
+      //movimientos[m].delay_bobina = 1000; //super hardcodeado
       mensaje = mensaje.substring(index+1);
     }
     movimientos[m].delay_total = mensaje.toInt();
@@ -317,27 +318,17 @@ void loop()
 
     else if (mensaje.startsWith("Set_mov")) {
         mensaje_movimientos = "";
-
         /*
         El mensaje viene del tipo: Set_mov_XXX_YYY
         donde XXX es el valor de delay_bobina y YYY es el número de movimientos a realizar.
         */
+        mensaje = mensaje.substring(7);
+        int index_delay_bobina = mensaje.indexOf('_');
+        delay_bobina = mensaje.substring(0, index_delay_bobina).toInt();
+        cantidad_movimientos = mensaje.substring(index_delay_bobina+1).toInt();
 
-        // Parsear delay_bobina y cantidad_movimientos
-        int primer_guion = mensaje.indexOf('_', 7); // Encuentra el primer guion bajo después de "Set_mov"
-        int segundo_guion = mensaje.indexOf('_', primer_guion + 1); // Encuentra el segundo guion bajo
+        Serial.println("Set_mov"+String(delay_bobina)+"_"+String(cantidad_movimientos));
 
-        if (primer_guion != -1 && segundo_guion != -1) {
-            delay_bobina = mensaje.substring(7, primer_guion).toInt(); // Extrae el valor de delay_bobina
-            cantidad_movimientos = mensaje.substring(primer_guion + 1, segundo_guion).toInt(); // Extrae cantidad_movimientos
-        } else {
-            Serial.println("Error: Formato de mensaje Set_mov incorrecto.");
-            return; // Salir si el formato no es válido
-        }
-
-        Serial.println("Set_mov recibido:");
-        Serial.println("Delay bobina: " + String(delay_bobina));
-        Serial.println("Cantidad de movimientos: " + String(cantidad_movimientos));
         espera_correcta_recepcion(); // Espero hasta OK
 
         while (true) {
