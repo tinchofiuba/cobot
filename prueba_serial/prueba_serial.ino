@@ -327,19 +327,22 @@ void loop()
         espera_correcta_recepcion(); // Espero hasta OK
 
         while (true) {
+          digitalWrite(13,HIGH);
             if (Serial.available() > 0) {
+              digitalWrite(13,LOW);
                 String mensaje_parcial = Serial.readStringUntil('\n');
                 mensaje_parcial.trim();
                 Serial.println(mensaje_parcial);
 
                 if (mensaje_parcial.startsWith("fin")) {
-                    break; // Salir del bucle si se recibe "fin_mov"
+                  digitalWrite(13,LOW);
+                  delay(1000);
+                  break; // Salir del bucle si se recibe "fin_mov"
                 } else if (mensaje_parcial.length() > 0) {
                     mensaje_movimientos += mensaje_parcial;
                 }
             }
         }
-
         setear_movimientos_cobot(mensaje_movimientos, false);
     }
 
@@ -354,8 +357,9 @@ void loop()
     }
 
     else if (mensaje.startsWith("Realizar movimientos")){
+      digitalWrite(13,HIGH);
+      delay(2000);
       /*
-      
       Serial.println(cantidad_movimientos);
       Serial.println(movimientos[0].eslabones[0].direccion);
       Serial.println(movimientos[0].eslabones[0].pasos);
@@ -381,8 +385,6 @@ void loop()
             delay(movimientos[n_mov].delay_total);
           }
 
-
-          
       }
       Serial.println("Movimientos finalizados");
     }
