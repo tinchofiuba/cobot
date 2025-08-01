@@ -335,8 +335,6 @@ void loop()
                 Serial.println(mensaje_parcial);
 
                 if (mensaje_parcial.startsWith("fin")) {
-                  digitalWrite(13,LOW);
-                  delay(1000);
                   break; // Salir del bucle si se recibe "fin_mov"
                 } else if (mensaje_parcial.length() > 0) {
                     mensaje_movimientos += mensaje_parcial;
@@ -357,8 +355,6 @@ void loop()
     }
 
     else if (mensaje.startsWith("Realizar movimientos")){
-      digitalWrite(13,HIGH);
-      delay(2000);
       /*
       Serial.println(cantidad_movimientos);
       Serial.println(movimientos[0].eslabones[0].direccion);
